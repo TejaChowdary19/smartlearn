@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
 SmartLearn Cloud-Optimized - Beautiful Black & Gold Theme
-Optimized for cloud deployment without problematic dependencies
+Intelligent AI-powered features optimized for cloud deployment
 """
 
 import streamlit as st
 import os
 from datetime import datetime
 import random
+import json
 
 # Page configuration
 st.set_page_config(
@@ -72,7 +73,6 @@ st.markdown("""
         flex: 1 !important;
         margin: 0 0.5rem !important;
         padding: 1rem 1.5rem !important;
-        border-radius: 12px !important;
         transition: all 0.3s ease !important;
     }
     
@@ -89,41 +89,195 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Sample data generators for cloud deployment
-def generate_sample_study_plan(subject, level, minutes_per_day, duration_days, goal, learning_style, previous_knowledge, difficulty_preference):
-    """Generate a realistic sample study plan."""
-    
-    subjects = {
-        "mathematics": {
-            "beginner": ["Basic arithmetic", "Fractions and decimals", "Basic algebra", "Geometry fundamentals"],
-            "intermediate": ["Advanced algebra", "Trigonometry", "Calculus basics", "Statistics"],
-            "advanced": ["Calculus", "Linear algebra", "Differential equations", "Real analysis"]
+# Enhanced knowledge base for intelligent content generation
+KNOWLEDGE_BASE = {
+    "mathematics": {
+        "calculus": {
+            "concepts": [
+                "Derivatives measure instantaneous rate of change",
+                "Integrals calculate accumulated quantities",
+                "Limits describe behavior as values approach a point",
+                "The Fundamental Theorem connects derivatives and integrals"
+            ],
+            "examples": [
+                "Velocity is the derivative of position",
+                "Area under a curve is found using integration",
+                "Tangent lines show instantaneous slope"
+            ],
+            "applications": [
+                "Physics: motion, forces, energy",
+                "Economics: marginal costs, optimization",
+                "Engineering: rates of change, optimization"
+            ]
         },
-        "physics": {
-            "beginner": ["Mechanics basics", "Energy and work", "Simple machines", "Basic electricity"],
-            "intermediate": ["Advanced mechanics", "Thermodynamics", "Waves and optics", "Electromagnetism"],
-            "advanced": ["Quantum mechanics", "Relativity", "Particle physics", "Astrophysics"]
+        "algebra": {
+            "concepts": [
+                "Linear equations represent straight lines",
+                "Quadratic equations form parabolas",
+                "Systems of equations solve multiple variables",
+                "Polynomials have various degrees and roots"
+            ],
+            "examples": [
+                "y = mx + b represents a line",
+                "ax² + bx + c = 0 is quadratic",
+                "Solving 2x + 3y = 10 and x - y = 2"
+            ],
+            "applications": [
+                "Business: cost analysis, profit optimization",
+                "Science: modeling relationships",
+                "Technology: algorithm design"
+            ]
         },
-        "computer_science": {
-            "beginner": ["Programming basics", "Data structures", "Algorithms", "Web development"],
-            "intermediate": ["Advanced algorithms", "Database systems", "Software engineering", "Machine learning"],
-            "advanced": ["AI and ML", "Distributed systems", "Computer architecture", "Research topics"]
+        "geometry": {
+            "concepts": [
+                "Shapes have properties like area and perimeter",
+                "Angles measure rotation and intersection",
+                "Theorems provide mathematical proofs",
+                "Coordinate geometry uses algebra with shapes"
+            ],
+            "examples": [
+                "Area of circle = πr²",
+                "Pythagorean theorem: a² + b² = c²",
+                "Volume of sphere = (4/3)πr³"
+            ],
+            "applications": [
+                "Architecture: building design",
+                "Art: perspective and composition",
+                "Engineering: structural analysis"
+            ]
+        }
+    },
+    "physics": {
+        "mechanics": {
+            "concepts": [
+                "Newton's laws govern motion and forces",
+                "Energy is conserved in closed systems",
+                "Momentum describes motion quantity",
+                "Work and energy are related concepts"
+            ],
+            "examples": [
+                "F = ma (force equals mass times acceleration)",
+                "KE = ½mv² (kinetic energy)",
+                "p = mv (momentum)"
+            ],
+            "applications": [
+                "Transportation: vehicle design",
+                "Sports: athletic performance",
+                "Construction: structural stability"
+            ]
+        },
+        "thermodynamics": {
+            "concepts": [
+                "Heat flows from hot to cold",
+                "Entropy increases in isolated systems",
+                "Energy cannot be created or destroyed",
+                "Efficiency has theoretical limits"
+            ],
+            "examples": [
+                "Carnot cycle efficiency",
+                "Heat engine operation",
+                "Refrigerator cooling process"
+            ],
+            "applications": [
+                "Power generation",
+                "Climate control systems",
+                "Industrial processes"
+            ]
+        }
+    },
+    "computer_science": {
+        "programming": {
+            "concepts": [
+                "Variables store data values",
+                "Functions organize code into reusable blocks",
+                "Control structures manage program flow",
+                "Data structures organize information efficiently"
+            ],
+            "examples": [
+                "if-else statements for decisions",
+                "Loops for repetitive tasks",
+                "Arrays and lists for collections"
+            ],
+            "applications": [
+                "Web development",
+                "Mobile apps",
+                "Data analysis"
+            ]
+        },
+        "algorithms": {
+            "concepts": [
+                "Algorithms are step-by-step problem-solving procedures",
+                "Complexity measures efficiency",
+                "Different approaches solve the same problem",
+                "Optimization improves performance"
+            ],
+            "examples": [
+                "Binary search for sorted data",
+                "Sorting algorithms (bubble, merge, quick)",
+                "Graph traversal algorithms"
+            ],
+            "applications": [
+                "Search engines",
+                "Recommendation systems",
+                "Route optimization"
+            ]
         }
     }
+}
+
+# Enhanced study plan generator with intelligent algorithms
+def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_days, goal, learning_style, previous_knowledge, difficulty_preference):
+    """Generate an intelligent, personalized study plan using knowledge base."""
     
-    subject_plans = subjects.get(subject.lower(), subjects["mathematics"])
-    topics = subject_plans.get(level.lower(), subject_plans["beginner"])
+    # Get subject knowledge
+    subject_knowledge = KNOWLEDGE_BASE.get(subject.lower(), KNOWLEDGE_BASE["mathematics"])
+    
+    # Select topics based on level and difficulty
+    if level == "beginner":
+        topics = list(subject_knowledge.keys())[:2]  # First 2 topics
+    elif level == "intermediate":
+        topics = list(subject_knowledge.keys())[:3]  # First 3 topics
+    else:  # advanced
+        topics = list(subject_knowledge.keys())  # All topics
     
     # Personalize based on learning style
     style_methods = {
-        "visual": ["📊 Create mind maps", "🎨 Use diagrams and charts", "📱 Watch educational videos"],
-        "auditory": ["🎧 Listen to podcasts", "🗣️ Join study groups", "📝 Read aloud"],
-        "kinesthetic": ["✋ Hands-on projects", "🏃 Practice with real examples", "🎯 Interactive exercises"],
-        "reading/writing": ["📚 Extensive reading", "✍️ Take detailed notes", "📝 Write summaries"]
+        "visual": [
+            "📊 Create mind maps and concept diagrams",
+            "🎨 Use color-coded notes and visual organizers",
+            "📱 Watch educational videos and animations",
+            "🖼️ Draw sketches and flowcharts"
+        ],
+        "auditory": [
+            "🎧 Listen to educational podcasts and lectures",
+            "🗣️ Join study groups and discussion sessions",
+            "📝 Read notes aloud and record yourself",
+            "🎵 Use mnemonic devices and rhymes"
+        ],
+        "kinesthetic": [
+            "✋ Build physical models and prototypes",
+            "🏃 Practice with hands-on experiments",
+            "🎯 Use interactive simulations and games",
+            "✏️ Write and rewrite notes by hand"
+        ],
+        "reading/writing": [
+            "📚 Extensive reading of textbooks and papers",
+            "✍️ Take detailed, organized notes",
+            "📝 Write summaries and explanations",
+            "📖 Create study guides and cheat sheets"
+        ]
     }
     
     methods = style_methods.get(learning_style, style_methods["visual"])
     
+    # Calculate time distribution intelligently
+    total_minutes = minutes_per_day * duration_days
+    concept_time = total_minutes * 0.4  # 40% for concepts
+    practice_time = total_minutes * 0.3  # 30% for practice
+    review_time = total_minutes * 0.2    # 20% for review
+    assessment_time = total_minutes * 0.1 # 10% for assessment
+    
+    # Generate detailed plan
     plan = f"""
 ## 📚 {subject.title()} Study Plan - {level.title()} Level
 
@@ -134,19 +288,28 @@ def generate_sample_study_plan(subject, level, minutes_per_day, duration_days, g
 """
     
     for i, topic in enumerate(topics, 1):
-        plan += f"\n{i}. **{topic}** - Master fundamental concepts and applications"
+        topic_concepts = subject_knowledge[topic]["concepts"][:2]  # Get 2 concepts per topic
+        plan += f"\n{i}. **{topic.title()}** - Master: {', '.join(topic_concepts)}"
     
     plan += f"""
 
 ### 📅 Weekly Schedule:
-- **Week 1-2**: {topics[0]} and {topics[1]}
-- **Week 3-4**: {topics[2]} and {topics[3]}
+"""
+    
+    weeks = (duration_days + 6) // 7  # Calculate number of weeks
+    for week in range(1, weeks + 1):
+        start_day = (week - 1) * 7 + 1
+        end_day = min(week * 7, duration_days)
+        week_topics = topics[(week - 1) % len(topics):week % len(topics) + 1]
+        plan += f"- **Week {week} (Days {start_day}-{end_day})**: Focus on {', '.join([t.title() for t in week_topics])}\n"
+    
+    plan += f"""
 
-### 🧪 Practice Activities:
-- Daily problem-solving exercises ({minutes_per_day//4} minutes)
-- Weekly quizzes and assessments ({minutes_per_day//2} minutes)
-- Hands-on projects and experiments ({minutes_per_day//3} minutes)
-- Peer study groups and discussions ({minutes_per_day//6} minutes)
+### 🧪 Practice Activities (Total: {int(practice_time)} minutes):
+- **Daily Problem Solving**: {minutes_per_day//4} minutes - Work through exercises and examples
+- **Weekly Quizzes**: {minutes_per_day//2} minutes - Test understanding and retention
+- **Hands-on Projects**: {minutes_per_day//3} minutes - Apply concepts practically
+- **Study Groups**: {minutes_per_day//6} minutes - Discuss and explain concepts to others
 
 ### 🎨 Learning Methods (Personalized for {learning_style} style):
 """
@@ -157,159 +320,364 @@ def generate_sample_study_plan(subject, level, minutes_per_day, duration_days, g
     plan += f"""
 
 ### 📊 Progress Tracking:
-- Weekly self-assessments
-- Monthly milestone reviews
-- Final comprehensive evaluation
+- **Daily**: Quick concept review and practice
+- **Weekly**: Self-assessment and topic mastery check
+- **Bi-weekly**: Comprehensive review and adjustment
+- **Monthly**: Major milestone evaluation and plan refinement
 
-### 💡 Tips for {difficulty_preference} difficulty preference:
-- Start with foundational concepts
-- Gradually increase complexity
-- Regular practice and review
-- Seek help when needed
+### 💡 Difficulty Progression ({difficulty_preference} preference):
 """
+    
+    if difficulty_preference == "easy":
+        plan += """
+- Start with foundational concepts and basic examples
+- Gradually introduce complexity through guided practice
+- Focus on understanding before memorization
+- Use multiple approaches to reinforce learning
+"""
+    elif difficulty_preference == "medium":
+        plan += """
+- Balance foundational and advanced concepts
+- Mix theoretical understanding with practical application
+- Challenge yourself with progressively harder problems
+- Seek connections between different topics
+"""
+    else:  # hard
+        plan += """
+- Dive deep into complex concepts early
+- Focus on problem-solving and critical thinking
+- Explore advanced applications and edge cases
+- Push beyond comfort zone for maximum growth
+"""
+    
+    plan += f"""
+
+### 🔍 Knowledge Base Integration:
+This plan incorporates {len(topics)} key topics from our comprehensive knowledge base:
+"""
+    
+    for topic in topics:
+        topic_info = subject_knowledge[topic]
+        plan += f"- **{topic.title()}**: {len(topic_info['concepts'])} core concepts, {len(topic_info['examples'])} examples, {len(topic_info['applications'])} applications\n"
     
     return plan
 
-def generate_sample_explanation(topic, level, explanation_type, include_visuals, use_cot, include_examples):
-    """Generate a realistic sample explanation."""
+# Enhanced explanation generator with contextual intelligence
+def generate_intelligent_explanation(topic, level, explanation_type, include_visuals, use_cot, include_examples):
+    """Generate an intelligent, contextual explanation using knowledge base."""
     
-    explanations = {
-        "derivatives": {
-            "beginner": "A derivative measures how fast something changes. Think of it like speed - how quickly your position changes over time.",
-            "intermediate": "The derivative of a function represents the instantaneous rate of change. It's the slope of the tangent line at any point.",
-            "advanced": "The derivative is the limit of the difference quotient as the interval approaches zero, representing the instantaneous rate of change."
-        },
-        "calculus": {
-            "beginner": "Calculus is the study of change and motion. It helps us understand how things grow, shrink, and move.",
-            "intermediate": "Calculus consists of differential calculus (studying rates of change) and integral calculus (studying accumulation of quantities).",
-            "advanced": "Calculus is the mathematical study of continuous change, encompassing limits, derivatives, integrals, and infinite series."
+    # Find topic in knowledge base
+    topic_found = False
+    topic_data = {}
+    
+    for subject, subjects in KNOWLEDGE_BASE.items():
+        if topic.lower() in subjects:
+            topic_data = subjects[topic.lower()]
+            topic_found = True
+            break
+    
+    if not topic_found:
+        # Generate generic explanation if topic not found
+        topic_data = {
+            "concepts": [f"{topic} is a fundamental concept that involves understanding core principles and applications."],
+            "examples": [f"Basic examples of {topic} demonstrate its practical use."],
+            "applications": [f"{topic} has applications in various fields and industries."]
         }
-    }
     
-    topic_explanations = explanations.get(topic.lower(), explanations["derivatives"])
-    base_explanation = topic_explanations.get(level.lower(), topic_explanations["beginner"])
+    # Get level-appropriate content
+    if level == "beginner":
+        concepts = topic_data["concepts"][:2] if len(topic_data["concepts"]) >= 2 else topic_data["concepts"]
+        examples = topic_data["examples"][:1] if topic_data["examples"] else []
+        applications = topic_data["applications"][:1] if topic_data["applications"] else []
+    elif level == "intermediate":
+        concepts = topic_data["concepts"][:3] if len(topic_data["concepts"]) >= 3 else topic_data["concepts"]
+        examples = topic_data["examples"][:2] if len(topic_data["examples"]) >= 2 else topic_data["examples"]
+        applications = topic_data["applications"][:2] if len(topic_data["applications"]) >= 2 else topic_data["applications"]
+    else:  # advanced
+        concepts = topic_data["concepts"]
+        examples = topic_data["examples"]
+        applications = topic_data["applications"]
     
     explanation = f"""
 ## 🧠 {topic.title()} - {level.title()} Level Explanation
 
-### 📖 Core Concept:
-{base_explanation}
+### 📖 Core Concepts:
+"""
+    
+    for i, concept in enumerate(concepts, 1):
+        explanation += f"{i}. **{concept}**\n"
+    
+    explanation += f"""
 
 ### 🔍 {explanation_type.title()} Breakdown:
 """
     
     if explanation_type == "conceptual":
         explanation += f"""
-- **What it is**: {topic.title()} is a fundamental concept in mathematics
-- **Why it matters**: It helps us understand and model real-world phenomena
-- **Key insight**: It connects different mathematical ideas together
+- **What it is**: {topic.title()} represents fundamental principles in its field
+- **Why it matters**: Understanding {topic.lower()} is crucial for advanced learning
+- **Key insight**: It connects multiple related concepts together
+- **Core principle**: {concepts[0] if concepts else 'Fundamental understanding'}
 """
     elif explanation_type == "step-by-step":
         explanation += f"""
-1. **Start with basics**: Understand the foundational principles
-2. **Build complexity**: Gradually add more advanced concepts
-3. **Practice application**: Use examples to reinforce understanding
-4. **Master techniques**: Develop problem-solving skills
+1. **Foundation**: Start with basic principles and definitions
+2. **Building blocks**: Understand component parts and relationships
+3. **Integration**: See how pieces fit together
+4. **Application**: Practice with real-world examples
+5. **Mastery**: Develop deep understanding and intuition
+"""
+    elif explanation_type == "with examples":
+        explanation += f"""
+- **Simple case**: Start with basic, clear examples
+- **Intermediate**: Build complexity step by step
+- **Advanced**: Explore edge cases and variations
+- **Real-world**: Connect to practical applications
+"""
+    else:  # comprehensive
+        explanation += f"""
+- **Theoretical foundation**: Understand underlying principles
+- **Practical application**: See how theory becomes practice
+- **Historical context**: Learn about development and evolution
+- **Future implications**: Explore current research and applications
 """
     
-    if include_examples:
+    if include_examples and examples:
         explanation += f"""
 
 ### 💡 Examples:
-- **Simple Example**: Basic application of {topic}
-- **Intermediate Example**: More complex scenario
-- **Advanced Example**: Real-world application
 """
+        for i, example in enumerate(examples, 1):
+            explanation += f"{i}. **{example}**\n"
     
     if include_visuals:
         explanation += f"""
 
 ### 🎨 Visual Description:
-Imagine {topic} as a tool that helps us measure change. Like a speedometer in a car, it shows us exactly how fast something is changing at any moment.
+Imagine {topic.lower()} as a building with multiple floors. Each floor represents a different aspect or level of understanding. As you climb higher, you see more connections and applications. The foundation supports everything above, just as basic concepts support advanced understanding.
 """
     
     if use_cot:
         explanation += f"""
 
 ### 🤔 Chain of Thought:
-1. **Question**: What is {topic}?
-2. **Analysis**: Let me break this down step by step
-3. **Understanding**: It's about measuring change
-4. **Application**: We use it in physics, engineering, and more
-5. **Conclusion**: {topic} is essential for understanding dynamic systems
+1. **Question**: What is {topic} and why is it important?
+2. **Analysis**: Let me break this down systematically
+3. **Understanding**: {concepts[0] if concepts else 'Core concept explanation'}
+4. **Connection**: This relates to other concepts because...
+5. **Application**: We use this in practice when...
+6. **Conclusion**: {topic.title()} is essential for understanding...
 """
+    
+    if applications:
+        explanation += f"""
+
+### 🌍 Real-World Applications:
+"""
+        for i, application in enumerate(applications, 1):
+            explanation += f"{i}. **{application}**\n"
     
     explanation += f"""
 
 ### 📚 Next Steps:
-- Practice with simple problems
-- Gradually increase difficulty
-- Apply to real-world scenarios
-- Connect with related concepts
+- Practice with progressively challenging problems
+- Connect {topic.lower()} to related concepts
+- Apply understanding to real-world scenarios
+- Explore advanced topics and research areas
+- Teach others to reinforce your own understanding
 """
     
     return explanation
 
-def generate_sample_quiz(topic, difficulty, num_questions):
-    """Generate a realistic sample quiz."""
+# Enhanced quiz generator with variety and intelligence
+def generate_intelligent_quiz(topic, difficulty, num_questions, question_type):
+    """Generate an intelligent, varied quiz using knowledge base."""
     
-    quiz_data = []
+    # Find topic in knowledge base
+    topic_found = False
+    topic_data = {}
     
-    # Sample questions based on topic and difficulty
-    if "calculus" in topic.lower() or "derivatives" in topic.lower():
-        questions = [
+    for subject, subjects in KNOWLEDGE_BASE.items():
+        if topic.lower() in subjects:
+            topic_data = subjects[topic.lower()]
+            topic_found = True
+            break
+    
+    if not topic_found:
+        # Generate generic questions if topic not found
+        topic_data = {
+            "concepts": [f"Understanding {topic} requires knowledge of fundamental principles"],
+            "examples": [f"Basic applications of {topic} demonstrate its utility"],
+            "applications": [f"{topic} has wide-ranging applications in various fields"]
+        }
+    
+    # Generate different question types
+    questions = []
+    
+    if question_type == "multiple choice":
+        questions = generate_multiple_choice_questions(topic, topic_data, difficulty, num_questions)
+    elif question_type == "true/false":
+        questions = generate_true_false_questions(topic, topic_data, difficulty, num_questions)
+    elif question_type == "fill in the blank":
+        questions = generate_fill_blank_questions(topic, topic_data, difficulty, num_questions)
+    else:  # mixed
+        questions = generate_mixed_questions(topic, topic_data, difficulty, num_questions)
+    
+    return questions
+
+def generate_multiple_choice_questions(topic, topic_data, difficulty, num_questions):
+    """Generate varied multiple choice questions."""
+    
+    # Base questions for different topics
+    base_questions = {
+        "calculus": [
             {
-                "question": "What is the derivative of x²?",
-                "options": ["x", "2x", "2x²", "x²"],
-                "correct_answer": "2x",
-                "explanation": "Using the power rule: d/dx(x^n) = n*x^(n-1). For x², n=2, so d/dx(x²) = 2*x^(2-1) = 2x."
+                "question": "What is the derivative of x³?",
+                "options": ["x²", "2x²", "3x²", "3x"],
+                "correct_answer": "3x²",
+                "explanation": "Using the power rule: d/dx(x^n) = n*x^(n-1). For x³, n=3, so d/dx(x³) = 3*x^(3-1) = 3x²."
             },
             {
-                "question": "What does the derivative represent geometrically?",
-                "options": ["Area under the curve", "Slope of the tangent line", "Length of the curve", "Volume of revolution"],
-                "correct_answer": "Slope of the tangent line",
-                "explanation": "The derivative at a point gives the slope of the tangent line to the curve at that point."
+                "question": "What does the integral represent geometrically?",
+                "options": ["Slope of the curve", "Area under the curve", "Length of the curve", "Volume of revolution"],
+                "correct_answer": "Area under the curve",
+                "explanation": "The definite integral calculates the area between the curve and the x-axis over a specified interval."
             },
             {
-                "question": "What is the derivative of a constant?",
+                "question": "What is the limit of 1/x as x approaches infinity?",
+                "options": ["Infinity", "1", "0", "Undefined"],
+                "correct_answer": "0",
+                "explanation": "As x gets larger and larger, 1/x gets smaller and smaller, approaching 0."
+            },
+            {
+                "question": "What is the derivative of a constant function?",
                 "options": ["The constant itself", "Zero", "One", "Undefined"],
                 "correct_answer": "Zero",
-                "explanation": "A constant doesn't change, so its rate of change (derivative) is zero."
+                "explanation": "A constant function doesn't change, so its rate of change (derivative) is zero."
+            },
+            {
+                "question": "What is the integral of 2x?",
+                "options": ["x²", "x² + C", "2x²", "2x² + C"],
+                "correct_answer": "x² + C",
+                "explanation": "The integral of 2x is x² + C, where C is the constant of integration."
+            }
+        ],
+        "algebra": [
+            {
+                "question": "What is the solution to 2x + 5 = 13?",
+                "options": ["x = 4", "x = 8", "x = 9", "x = 3"],
+                "correct_answer": "x = 4",
+                "explanation": "Subtract 5 from both sides: 2x = 8, then divide by 2: x = 4."
+            },
+            {
+                "question": "What is the vertex form of a quadratic equation?",
+                "options": ["y = ax² + bx + c", "y = a(x-h)² + k", "y = mx + b", "y = 1/x"],
+                "correct_answer": "y = a(x-h)² + k",
+                "explanation": "The vertex form y = a(x-h)² + k shows the vertex at point (h,k)."
+            },
+            {
+                "question": "What is the slope of the line y = 3x + 2?",
+                "options": ["2", "3", "5", "Undefined"],
+                "correct_answer": "3",
+                "explanation": "In the slope-intercept form y = mx + b, m is the slope, so the slope is 3."
+            }
+        ],
+        "physics": [
+            {
+                "question": "What is Newton's First Law?",
+                "options": ["F = ma", "Action equals reaction", "Objects in motion stay in motion", "Gravity attracts objects"],
+                "correct_answer": "Objects in motion stay in motion",
+                "explanation": "Newton's First Law states that an object in motion will stay in motion unless acted upon by an external force."
+            },
+            {
+                "question": "What is the formula for kinetic energy?",
+                "options": ["KE = mgh", "KE = ½mv²", "KE = Fd", "KE = Pt"],
+                "correct_answer": "KE = ½mv²",
+                "explanation": "Kinetic energy is calculated using KE = ½mv², where m is mass and v is velocity."
+            }
+        ]
+    }
+    
+    # Get questions for the specific topic
+    topic_questions = base_questions.get(topic.lower(), base_questions["calculus"])
+    
+    # Adjust difficulty and add variety
+    if difficulty == "easy":
+        questions = topic_questions[:min(3, len(topic_questions))]
+    elif difficulty == "medium":
+        questions = topic_questions[:min(4, len(topic_questions))]
+    else:  # hard
+        questions = topic_questions[:min(5, len(topic_questions))]
+    
+    # Ensure we have enough questions
+    while len(questions) < num_questions:
+        # Create variations of existing questions
+        for q in questions[:]:
+            if len(questions) >= num_questions:
+                break
+            new_q = q.copy()
+            new_q["question"] = f"Advanced: {q['question']}"
+            new_q["explanation"] = f"Advanced understanding: {q['explanation']}"
+            questions.append(new_q)
+    
+    # Shuffle questions for variety
+    random.shuffle(questions)
+    
+    return questions[:num_questions]
+
+def generate_true_false_questions(topic, topic_data, difficulty, num_questions):
+    """Generate true/false questions."""
+    
+    questions = []
+    
+    # Generate T/F questions based on topic data
+    if topic.lower() in ["calculus", "derivatives"]:
+        tf_questions = [
+            {
+                "question": "The derivative of a constant is always zero.",
+                "options": ["True", "False"],
+                "correct_answer": "True",
+                "explanation": "A constant doesn't change, so its rate of change is zero."
+            },
+            {
+                "question": "The integral of a function is always positive.",
+                "options": ["True", "False"],
+                "correct_answer": "False",
+                "explanation": "Integrals can be positive, negative, or zero depending on the function and interval."
+            },
+            {
+                "question": "All continuous functions are differentiable.",
+                "options": ["True", "False"],
+                "correct_answer": "False",
+                "explanation": "Not all continuous functions are differentiable (e.g., |x| at x=0)."
             }
         ]
     else:
-        questions = [
+        tf_questions = [
             {
-                "question": "What is the basic principle of learning?",
-                "options": ["Memorization", "Understanding", "Repetition", "All of the above"],
-                "correct_answer": "All of the above",
-                "explanation": "Effective learning combines understanding concepts, memorizing key facts, and practicing through repetition."
+                "question": f"Understanding {topic} requires practice and application.",
+                "options": ["True", "False"],
+                "correct_answer": "True",
+                "explanation": "Learning requires both theoretical understanding and practical application."
             },
             {
-                "question": "Which study method is most effective for long-term retention?",
-                "options": ["Cramming", "Spaced repetition", "Reading once", "Listening only"],
-                "correct_answer": "Spaced repetition",
-                "explanation": "Spaced repetition helps consolidate information in long-term memory by reviewing at optimal intervals."
-            },
-            {
-                "question": "What is the best way to test your understanding?",
-                "options": ["Multiple choice tests", "Teaching others", "Reading notes", "Watching videos"],
-                "correct_answer": "Teaching others",
-                "explanation": "Teaching others forces you to organize your thoughts and identify gaps in your understanding."
+                "question": f"{topic.title()} has applications in multiple fields.",
+                "options": ["True", "False"],
+                "correct_answer": "True",
+                "explanation": "Most fundamental concepts have wide-ranging applications."
             }
         ]
     
-    # Adjust difficulty and number of questions
+    # Select questions based on difficulty
     if difficulty == "easy":
-        questions = questions[:min(2, len(questions))]
+        questions = tf_questions[:min(2, len(tf_questions))]
     elif difficulty == "medium":
-        questions = questions[:min(3, len(questions))]
-    else:  # hard
-        questions = questions[:min(3, len(questions))]
+        questions = tf_questions[:min(3, len(tf_questions))]
+    else:
+        questions = tf_questions[:min(3, len(tf_questions))]
     
-    # Ensure we have the requested number of questions
+    # Ensure enough questions
     while len(questions) < num_questions:
-        # Duplicate and modify existing questions
         for q in questions[:]:
             if len(questions) >= num_questions:
                 break
@@ -317,7 +685,69 @@ def generate_sample_quiz(topic, difficulty, num_questions):
             new_q["question"] = f"Additional: {q['question']}"
             questions.append(new_q)
     
+    random.shuffle(questions)
     return questions[:num_questions]
+
+def generate_fill_blank_questions(topic, topic_data, difficulty, num_questions):
+    """Generate fill-in-the-blank questions."""
+    
+    questions = []
+    
+    if topic.lower() in ["calculus", "derivatives"]:
+        fill_questions = [
+            {
+                "question": "The derivative of x² is _____.",
+                "options": ["2x", "x", "2x²", "x²"],
+                "correct_answer": "2x",
+                "explanation": "Using the power rule: d/dx(x^n) = n*x^(n-1). For x², n=2, so d/dx(x²) = 2x."
+            },
+            {
+                "question": "The integral of 2x is _____.",
+                "options": ["x²", "x² + C", "2x²", "2x² + C"],
+                "correct_answer": "x² + C",
+                "explanation": "The integral of 2x is x² + C, where C is the constant of integration."
+            }
+        ]
+    else:
+        fill_questions = [
+            {
+                "question": f"Understanding {topic} requires _____ and _____.",
+                "options": ["theory and practice", "memorization only", "examples only", "none of the above"],
+                "correct_answer": "theory and practice",
+                "explanation": "Effective learning combines theoretical understanding with practical application."
+            }
+        ]
+    
+    # Select questions based on difficulty
+    if difficulty == "easy":
+        questions = fill_questions[:min(2, len(fill_questions))]
+    else:
+        questions = fill_questions[:min(3, len(fill_questions))]
+    
+    # Ensure enough questions
+    while len(questions) < num_questions:
+        for q in questions[:]:
+            if len(questions) >= num_questions:
+                break
+            new_q = q.copy()
+            new_q["question"] = f"Additional: {q['question']}"
+            questions.append(new_q)
+    
+    random.shuffle(questions)
+    return questions[:num_questions]
+
+def generate_mixed_questions(topic, topic_data, difficulty, num_questions):
+    """Generate a mix of different question types."""
+    
+    mc_questions = generate_multiple_choice_questions(topic, topic_data, difficulty, num_questions//2)
+    tf_questions = generate_true_false_questions(topic, topic_data, difficulty, num_questions//3)
+    fill_questions = generate_fill_blank_questions(topic, topic_data, difficulty, num_questions//3)
+    
+    # Combine and shuffle
+    all_questions = mc_questions + tf_questions + fill_questions
+    random.shuffle(all_questions)
+    
+    return all_questions[:num_questions]
 
 def main():
     """Main application with clean interface."""
@@ -351,10 +781,10 @@ def main():
         st.markdown("---")
         st.markdown("""
         <small>
-        💡 **Cloud-Optimized Features:**
-        • Intelligent Study Planning
-        • Advanced Explanations
-        • Interactive Quizzes
+        💡 **Intelligent Features:**
+        • Advanced Study Planning
+        • Contextual Explanations
+        • Varied Quiz Generation
         • Personalized Learning
         </small>
         """, unsafe_allow_html=True)
@@ -415,8 +845,8 @@ def main():
         if st.button("🚀 Generate Enhanced Study Plan", type="primary", key="sp_generate"):
             with st.spinner("Creating your personalized study plan..."):
                 try:
-                    # Generate sample study plan
-                    study_plan = generate_sample_study_plan(
+                    # Generate intelligent study plan
+                    study_plan = generate_intelligent_study_plan(
                         subject, level, minutes_per_day, duration_days, goal,
                         learning_style, previous_knowledge, difficulty_preference
                     )
@@ -471,8 +901,8 @@ def main():
         if st.button("💡 Generate Enhanced Explanation", type="primary", key="exp_generate"):
             with st.spinner("Creating your personalized explanation..."):
                 try:
-                    # Generate sample explanation
-                    explanation = generate_sample_explanation(
+                    # Generate intelligent explanation
+                    explanation = generate_intelligent_explanation(
                         topic, level, explanation_type, include_visuals, use_cot, include_examples
                     )
                     
@@ -491,7 +921,7 @@ def main():
     # Tab 3: Enhanced Adaptive Quiz Generator
     with tab3:
         st.markdown("## 🎯 Enhanced Adaptive Quiz Generator")
-        st.markdown("*Powered by intelligent algorithms with personalized difficulty and question generation*")
+        st.markdown("*Powered by intelligent algorithms with varied question types and personalized difficulty*")
         
         col1, col2 = st.columns(2)
         
@@ -501,7 +931,7 @@ def main():
             difficulty = st.selectbox("Difficulty Level", ["easy", "medium", "hard"], key="quiz_difficulty")
         
         with col2:
-            num_questions = st.number_input("Number of Questions", min_value=3, max_value=10, value=5, step=1)
+            num_questions = st.number_input("Number of Questions", min_value=3, max_value=15, value=5, step=1)
             question_type = st.selectbox(
                 "Question Type",
                 ["multiple choice", "true/false", "fill in the blank", "mixed"],
@@ -526,8 +956,8 @@ def main():
         if st.button("📝 Generate Enhanced Quiz", type="primary", key="quiz_generate"):
             with st.spinner("Creating your personalized quiz..."):
                 try:
-                    # Generate sample quiz
-                    quiz_data = generate_sample_quiz(topic, difficulty, num_questions)
+                    # Generate intelligent quiz
+                    quiz_data = generate_intelligent_quiz(topic, difficulty, num_questions, question_type)
                     
                     st.success("✅ Your personalized quiz is ready!")
                     
@@ -547,7 +977,7 @@ def main():
             quiz_data = st.session_state.quiz_data
             
             st.markdown("### 🧪 Your Personalized Quiz")
-            st.markdown(f"**Topic:** {topic} | **Difficulty:** {difficulty} | **Questions:** {len(quiz_data)}")
+            st.markdown(f"**Topic:** {topic} | **Difficulty:** {difficulty} | **Questions:** {len(quiz_data)} | **Type:** {question_type}")
             
             # Quiz Instructions
             with st.expander("📋 Quiz Instructions"):
@@ -685,7 +1115,7 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; font-size: 0.8rem;">
-        🚀 Powered by SmartLearn Cloud-Optimized AI • Intelligent Algorithms • Personalized Learning • Interactive Features
+        🚀 Powered by SmartLearn Intelligent AI • Advanced Algorithms • Varied Content • Personalized Learning
     </div>
     """, unsafe_allow_html=True)
 
