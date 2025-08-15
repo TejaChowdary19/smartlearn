@@ -93,134 +93,526 @@ st.markdown("""
 KNOWLEDGE_BASE = {
     "mathematics": {
         "calculus": {
-            "concepts": [
-                "Derivatives measure instantaneous rate of change",
-                "Integrals calculate accumulated quantities",
-                "Limits describe behavior as values approach a point",
-                "The Fundamental Theorem connects derivatives and integrals"
-            ],
-            "examples": [
-                "Velocity is the derivative of position",
-                "Area under a curve is found using integration",
-                "Tangent lines show instantaneous slope"
-            ],
-            "applications": [
-                "Physics: motion, forces, energy",
-                "Economics: marginal costs, optimization",
-                "Engineering: rates of change, optimization"
-            ]
+            "beginner": {
+                "concepts": [
+                    "Understanding what derivatives represent",
+                    "Basic derivative rules (power rule, constant rule)",
+                    "Simple applications like velocity and acceleration",
+                    "Graphical interpretation of derivatives"
+                ],
+                "examples": [
+                    "Finding the derivative of x² using power rule",
+                    "Understanding that velocity is the derivative of position",
+                    "Simple slope calculations"
+                ],
+                "applications": [
+                    "Basic physics problems",
+                    "Simple optimization problems",
+                    "Understanding rates of change"
+                ],
+                "weekly_topics": [
+                    "Week 1: Introduction to derivatives and basic rules",
+                    "Week 2: Power rule and constant rule practice",
+                    "Week 3: Simple applications and word problems",
+                    "Week 4: Review and assessment"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced derivative rules (product, quotient, chain rule)",
+                    "Implicit differentiation",
+                    "Related rates problems",
+                    "Applications to optimization"
+                ],
+                "examples": [
+                    "Using chain rule for composite functions",
+                    "Solving related rates problems",
+                    "Finding maximum/minimum values"
+                ],
+                "applications": [
+                    "Economics: marginal cost and revenue",
+                    "Engineering: optimization problems",
+                    "Physics: complex motion problems"
+                ],
+                "weekly_topics": [
+                    "Week 1: Product and quotient rules",
+                    "Week 2: Chain rule and composite functions",
+                    "Week 3: Implicit differentiation",
+                    "Week 4: Related rates and optimization"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Multivariable calculus concepts",
+                    "Partial derivatives and gradients",
+                    "Vector calculus fundamentals",
+                    "Advanced optimization techniques"
+                ],
+                "examples": [
+                    "Finding partial derivatives of functions",
+                    "Using Lagrange multipliers for optimization",
+                    "Understanding gradient descent"
+                ],
+                "applications": [
+                    "Machine learning algorithms",
+                    "Advanced physics modeling",
+                    "Financial mathematics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Multivariable functions and partial derivatives",
+                    "Week 2: Gradients and directional derivatives",
+                    "Week 3: Advanced optimization methods",
+                    "Week 4: Applications in modern fields"
+                ]
+            }
         },
         "algebra": {
-            "concepts": [
-                "Linear equations represent straight lines",
-                "Quadratic equations form parabolas",
-                "Systems of equations solve multiple variables",
-                "Polynomials have various degrees and roots"
-            ],
-            "examples": [
-                "y = mx + b represents a line",
-                "ax² + bx + c = 0 is quadratic",
-                "Solving 2x + 3y = 10 and x - y = 2"
-            ],
-            "applications": [
-                "Business: cost analysis, profit optimization",
-                "Science: modeling relationships",
-                "Technology: algorithm design"
-            ]
+            "beginner": {
+                "concepts": [
+                    "Basic algebraic operations",
+                    "Solving linear equations",
+                    "Understanding variables and constants",
+                    "Simple factoring techniques"
+                ],
+                "examples": [
+                    "Solving 2x + 5 = 13",
+                    "Factoring x² + 5x + 6",
+                    "Understanding y = mx + b form"
+                ],
+                "applications": [
+                    "Basic business calculations",
+                    "Simple science formulas",
+                    "Everyday problem solving"
+                ],
+                "weekly_topics": [
+                    "Week 1: Basic operations and linear equations",
+                    "Week 2: Factoring and quadratic expressions",
+                    "Week 3: Graphing linear functions",
+                    "Week 4: Word problems and applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Quadratic equations and functions",
+                    "Systems of equations",
+                    "Polynomial functions",
+                    "Rational expressions"
+                ],
+                "examples": [
+                    "Solving quadratic equations using various methods",
+                    "Solving systems of linear equations",
+                    "Graphing polynomial functions"
+                ],
+                "applications": [
+                    "Business optimization",
+                    "Scientific modeling",
+                    "Engineering calculations"
+                ],
+                "weekly_topics": [
+                    "Week 1: Quadratic equations and functions",
+                    "Week 2: Systems of equations",
+                    "Week 3: Polynomial functions and graphs",
+                    "Week 4: Complex applications and problem solving"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Complex numbers and operations",
+                    "Advanced polynomial theory",
+                    "Abstract algebra concepts",
+                    "Linear algebra foundations"
+                ],
+                "examples": [
+                    "Working with complex numbers",
+                    "Understanding polynomial roots and factors",
+                    "Basic matrix operations"
+                ],
+                "applications": [
+                    "Advanced engineering",
+                    "Computer science algorithms",
+                    "Theoretical physics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Complex numbers and operations",
+                    "Week 2: Advanced polynomial theory",
+                    "Week 3: Introduction to linear algebra",
+                    "Week 4: Abstract concepts and applications"
+                ]
+            }
         },
         "geometry": {
-            "concepts": [
-                "Shapes have properties like area and perimeter",
-                "Angles measure rotation and intersection",
-                "Theorems provide mathematical proofs",
-                "Coordinate geometry uses algebra with shapes"
-            ],
-            "examples": [
-                "Area of circle = πr²",
-                "Pythagorean theorem: a² + b² = c²",
-                "Volume of sphere = (4/3)πr³"
-            ],
-            "applications": [
-                "Architecture: building design",
-                "Art: perspective and composition",
-                "Engineering: structural analysis"
-            ]
+            "beginner": {
+                "concepts": [
+                    "Basic geometric shapes and properties",
+                    "Area and perimeter calculations",
+                    "Understanding angles and measurements",
+                    "Simple geometric proofs"
+                ],
+                "examples": [
+                    "Calculating area of rectangles and triangles",
+                    "Understanding complementary and supplementary angles",
+                    "Basic Pythagorean theorem applications"
+                ],
+                "applications": [
+                    "Basic construction and design",
+                    "Simple measurement problems",
+                    "Art and design fundamentals"
+                ],
+                "weekly_topics": [
+                    "Week 1: Basic shapes and properties",
+                    "Week 2: Area and perimeter calculations",
+                    "Week 3: Angles and measurements",
+                    "Week 4: Simple proofs and applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced geometric theorems",
+                    "Coordinate geometry",
+                    "Trigonometry fundamentals",
+                    "Geometric transformations"
+                ],
+                "examples": [
+                    "Using coordinate geometry to solve problems",
+                    "Applying trigonometric ratios",
+                    "Understanding geometric transformations"
+                ],
+                "applications": [
+                    "Architecture and design",
+                    "Computer graphics",
+                    "Navigation and surveying"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced theorems and proofs",
+                    "Week 2: Coordinate geometry",
+                    "Week 3: Trigonometry fundamentals",
+                    "Week 4: Transformations and applications"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Non-Euclidean geometry",
+                    "Advanced trigonometry",
+                    "Vector geometry",
+                    "Geometric analysis"
+                ],
+                "examples": [
+                    "Understanding spherical geometry",
+                    "Advanced trigonometric identities",
+                    "Vector operations in geometry"
+                ],
+                "applications": [
+                    "Advanced physics",
+                    "Computer vision",
+                    "Theoretical mathematics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Non-Euclidean geometry concepts",
+                    "Week 2: Advanced trigonometry",
+                    "Week 3: Vector geometry",
+                    "Week 4: Modern applications and research"
+                ]
+            }
         }
     },
     "physics": {
         "mechanics": {
-            "concepts": [
-                "Newton's laws govern motion and forces",
-                "Energy is conserved in closed systems",
-                "Momentum describes motion quantity",
-                "Work and energy are related concepts"
-            ],
-            "examples": [
-                "F = ma (force equals mass times acceleration)",
-                "KE = ½mv² (kinetic energy)",
-                "p = mv (momentum)"
-            ],
-            "applications": [
-                "Transportation: vehicle design",
-                "Sports: athletic performance",
-                "Construction: structural stability"
-            ]
+            "beginner": {
+                "concepts": [
+                    "Basic motion concepts (speed, velocity, acceleration)",
+                    "Newton's laws of motion",
+                    "Simple force calculations",
+                    "Energy and work basics"
+                ],
+                "examples": [
+                    "Calculating average speed",
+                    "Understanding F = ma",
+                    "Basic energy conservation problems"
+                ],
+                "applications": [
+                    "Everyday motion problems",
+                    "Simple machine operation",
+                    "Basic sports physics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Motion and speed concepts",
+                    "Week 2: Newton's laws and forces",
+                    "Week 3: Energy and work",
+                    "Week 4: Simple applications and problems"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced motion analysis",
+                    "Momentum and collisions",
+                    "Circular motion and gravity",
+                    "Work-energy theorem"
+                ],
+                "examples": [
+                    "Solving collision problems",
+                    "Understanding centripetal force",
+                    "Advanced energy problems"
+                ],
+                "applications": [
+                    "Vehicle safety design",
+                    "Sports performance analysis",
+                    "Engineering applications"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced motion analysis",
+                    "Week 2: Momentum and collisions",
+                    "Week 3: Circular motion and gravity",
+                    "Week 4: Complex applications and problem solving"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Lagrangian and Hamiltonian mechanics",
+                    "Advanced collision theory",
+                    "Rigid body dynamics",
+                    "Chaos theory in mechanics"
+                ],
+                "examples": [
+                    "Using Lagrangian mechanics",
+                    "Understanding chaotic systems",
+                    "Advanced rigid body problems"
+                ],
+                "applications": [
+                    "Advanced engineering design",
+                    "Research in physics",
+                    "Complex system modeling"
+                ],
+                "weekly_topics": [
+                    "Week 1: Lagrangian mechanics",
+                    "Week 2: Advanced collision theory",
+                    "Week 3: Rigid body dynamics",
+                    "Week 4: Modern research applications"
+                ]
+            }
         },
         "thermodynamics": {
-            "concepts": [
-                "Heat flows from hot to cold",
-                "Entropy increases in isolated systems",
-                "Energy cannot be created or destroyed",
-                "Efficiency has theoretical limits"
-            ],
-            "examples": [
-                "Carnot cycle efficiency",
-                "Heat engine operation",
-                "Refrigerator cooling process"
-            ],
-            "applications": [
-                "Power generation",
-                "Climate control systems",
-                "Industrial processes"
-            ]
+            "beginner": {
+                "concepts": [
+                    "Temperature and heat basics",
+                    "First law of thermodynamics",
+                    "Simple heat transfer",
+                    "Basic gas laws"
+                ],
+                "examples": [
+                    "Understanding temperature scales",
+                    "Basic heat calculations",
+                    "Simple gas law problems"
+                ],
+                "applications": [
+                    "Basic heating and cooling",
+                    "Simple engine operation",
+                    "Everyday temperature effects"
+                ],
+                "weekly_topics": [
+                    "Week 1: Temperature and heat concepts",
+                    "Week 2: First law of thermodynamics",
+                    "Week 3: Heat transfer basics",
+                    "Week 4: Gas laws and simple applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Second law of thermodynamics",
+                    "Entropy and disorder",
+                    "Heat engines and efficiency",
+                    "Advanced gas processes"
+                ],
+                "examples": [
+                    "Calculating engine efficiency",
+                    "Understanding entropy changes",
+                    "Advanced gas law problems"
+                ],
+                "applications": [
+                    "Engine design and optimization",
+                    "Refrigeration systems",
+                    "Power generation"
+                ],
+                "weekly_topics": [
+                    "Week 1: Second law and entropy",
+                    "Week 2: Heat engines and efficiency",
+                    "Week 3: Advanced gas processes",
+                    "Week 4: Complex thermodynamic systems"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Statistical thermodynamics",
+                    "Quantum thermodynamics",
+                    "Non-equilibrium thermodynamics",
+                    "Advanced entropy concepts"
+                ],
+                "examples": [
+                    "Understanding statistical mechanics",
+                    "Quantum thermodynamic effects",
+                    "Non-equilibrium processes"
+                ],
+                "applications": [
+                    "Advanced power systems",
+                    "Quantum computing",
+                    "Research in thermodynamics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Statistical thermodynamics",
+                    "Week 2: Quantum thermodynamics",
+                    "Week 3: Non-equilibrium processes",
+                    "Week 4: Modern research and applications"
+                ]
+            }
         }
     },
     "computer_science": {
         "programming": {
-            "concepts": [
-                "Variables store data values",
-                "Functions organize code into reusable blocks",
-                "Control structures manage program flow",
-                "Data structures organize information efficiently"
-            ],
-            "examples": [
-                "if-else statements for decisions",
-                "Loops for repetitive tasks",
-                "Arrays and lists for collections"
-            ],
-            "applications": [
-                "Web development",
-                "Mobile apps",
-                "Data analysis"
-            ]
+            "beginner": {
+                "concepts": [
+                    "Variables and data types",
+                    "Basic control structures (if-else, loops)",
+                    "Functions and parameters",
+                    "Simple input/output operations"
+                ],
+                "examples": [
+                    "Writing a simple calculator program",
+                    "Creating loops to process data",
+                    "Defining and calling functions"
+                ],
+                "applications": [
+                    "Simple automation tasks",
+                    "Basic data processing",
+                    "Learning problem-solving skills"
+                ],
+                "weekly_topics": [
+                    "Week 1: Variables and basic operations",
+                    "Week 2: Control structures and logic",
+                    "Week 3: Functions and modularity",
+                    "Week 4: Simple projects and applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Object-oriented programming",
+                    "Data structures (arrays, lists, dictionaries)",
+                    "Error handling and debugging",
+                    "File operations and I/O"
+                ],
+                "examples": [
+                    "Creating classes and objects",
+                    "Implementing data structures",
+                    "Building robust programs with error handling"
+                ],
+                "applications": [
+                    "Web development",
+                    "Desktop applications",
+                    "Data analysis tools"
+                ],
+                "weekly_topics": [
+                    "Week 1: Object-oriented concepts",
+                    "Week 2: Data structures and algorithms",
+                    "Week 3: Error handling and debugging",
+                    "Week 4: Building complete applications"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Design patterns and architecture",
+                    "Advanced algorithms and optimization",
+                    "Concurrent programming",
+                    "Software testing and quality"
+                ],
+                "examples": [
+                    "Implementing design patterns",
+                    "Optimizing algorithms for performance",
+                    "Writing concurrent and parallel code"
+                ],
+                "applications": [
+                    "Large-scale software systems",
+                    "High-performance applications",
+                    "Enterprise software development"
+                ],
+                "weekly_topics": [
+                    "Week 1: Design patterns and architecture",
+                    "Week 2: Advanced algorithms",
+                    "Week 3: Concurrent programming",
+                    "Week 4: Software quality and testing"
+                ]
+            }
         },
         "algorithms": {
-            "concepts": [
-                "Algorithms are step-by-step problem-solving procedures",
-                "Complexity measures efficiency",
-                "Different approaches solve the same problem",
-                "Optimization improves performance"
-            ],
-            "examples": [
-                "Binary search for sorted data",
-                "Sorting algorithms (bubble, merge, quick)",
-                "Graph traversal algorithms"
-            ],
-            "applications": [
-                "Search engines",
-                "Recommendation systems",
-                "Route optimization"
-            ]
+            "beginner": {
+                "concepts": [
+                    "Basic algorithm concepts",
+                    "Simple sorting algorithms",
+                    "Search algorithms",
+                    "Algorithm efficiency basics"
+                ],
+                "examples": [
+                    "Implementing bubble sort",
+                    "Understanding binary search",
+                    "Analyzing simple algorithms"
+                ],
+                "applications": [
+                    "Basic data organization",
+                    "Simple search problems",
+                    "Learning computational thinking"
+                ],
+                "weekly_topics": [
+                    "Week 1: Algorithm fundamentals",
+                    "Week 2: Basic sorting algorithms",
+                    "Week 3: Search algorithms",
+                    "Week 4: Efficiency and analysis"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced sorting algorithms",
+                    "Graph algorithms",
+                    "Dynamic programming basics",
+                    "Algorithm complexity analysis"
+                ],
+                "examples": [
+                    "Implementing merge sort and quick sort",
+                    "Solving graph traversal problems",
+                    "Understanding dynamic programming"
+                ],
+                "applications": [
+                    "Network analysis",
+                    "Route optimization",
+                    "Data processing systems"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced sorting algorithms",
+                    "Week 2: Graph algorithms",
+                    "Week 3: Dynamic programming",
+                    "Week 4: Complex problem solving"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Advanced algorithm design",
+                    "NP-complete problems",
+                    "Approximation algorithms",
+                    "Parallel and distributed algorithms"
+                ],
+                "examples": [
+                    "Designing approximation algorithms",
+                    "Understanding NP-completeness",
+                    "Implementing parallel algorithms"
+                ],
+                "applications": [
+                    "Advanced research",
+                    "Complex optimization problems",
+                    "Distributed systems"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced algorithm design",
+                    "Week 2: NP-complete problems",
+                    "Week 3: Approximation algorithms",
+                    "Week 4: Modern algorithmic research"
+                ]
+            }
         }
     }
 }
@@ -277,7 +669,7 @@ def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_da
     review_time = total_minutes * 0.2    # 20% for review
     assessment_time = total_minutes * 0.1 # 10% for assessment
     
-    # Generate detailed plan
+    # Generate detailed plan with topic-specific content
     plan = f"""
 ## 📚 {subject.title()} Study Plan - {level.title()} Level
 
@@ -288,8 +680,10 @@ def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_da
 """
     
     for i, topic in enumerate(topics, 1):
-        topic_concepts = subject_knowledge[topic]["concepts"][:2]  # Get 2 concepts per topic
-        plan += f"\n{i}. **{topic.title()}** - Master: {', '.join(topic_concepts)}"
+        # Get level-specific content for each topic
+        topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+        concepts = topic_content["concepts"][:3]  # Get first 3 concepts
+        plan += f"\n{i}. **{topic.title()}** - Master: {', '.join(concepts)}"
     
     plan += f"""
 
@@ -301,7 +695,18 @@ def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_da
         start_day = (week - 1) * 7 + 1
         end_day = min(week * 7, duration_days)
         week_topics = topics[(week - 1) % len(topics):week % len(topics) + 1]
-        plan += f"- **Week {week} (Days {start_day}-{end_day})**: Focus on {', '.join([t.title() for t in week_topics])}\n"
+        
+        # Get specific weekly topics for each subject
+        week_details = []
+        for topic in week_topics:
+            topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+            weekly_topics = topic_content.get("weekly_topics", [])
+            if weekly_topics:
+                week_details.append(f"{topic.title()}: {weekly_topics[week % len(weekly_topics) - 1]}")
+            else:
+                week_details.append(topic.title())
+        
+        plan += f"- **Week {week} (Days {start_day}-{end_day})**: Focus on {', '.join(week_details)}\n"
     
     plan += f"""
 
@@ -352,13 +757,20 @@ def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_da
     
     plan += f"""
 
-### 🔍 Knowledge Base Integration:
-This plan incorporates {len(topics)} key topics from our comprehensive knowledge base:
+### 🔍 Topic-Specific Content:
+This plan incorporates {len(topics)} key topics with level-appropriate content:
 """
     
     for topic in topics:
-        topic_info = subject_knowledge[topic]
-        plan += f"- **{topic.title()}**: {len(topic_info['concepts'])} core concepts, {len(topic_info['examples'])} examples, {len(topic_info['applications'])} applications\n"
+        topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+        plan += f"- **{topic.title()}**: {len(topic_content['concepts'])} core concepts, {len(topic_content['examples'])} examples, {len(topic_content['applications'])} applications\n"
+    
+    # Add specific examples for the selected topics
+    plan += f"\n### 📝 Specific Examples for {level.title()} Level:\n"
+    for topic in topics:
+        topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+        examples = topic_content["examples"][:2]  # Get 2 examples
+        plan += f"- **{topic.title()}**: {', '.join(examples)}\n"
     
     return plan
 
@@ -369,35 +781,33 @@ def generate_intelligent_explanation(topic, level, explanation_type, include_vis
     # Find topic in knowledge base
     topic_found = False
     topic_data = {}
+    subject_name = ""
     
     for subject, subjects in KNOWLEDGE_BASE.items():
         if topic.lower() in subjects:
             topic_data = subjects[topic.lower()]
+            subject_name = subject
             topic_found = True
             break
     
     if not topic_found:
         # Generate generic explanation if topic not found
         topic_data = {
-            "concepts": [f"{topic} is a fundamental concept that involves understanding core principles and applications."],
-            "examples": [f"Basic examples of {topic} demonstrate its practical use."],
-            "applications": [f"{topic} has applications in various fields and industries."]
+            "beginner": {
+                "concepts": [f"{topic} is a fundamental concept that involves understanding core principles and applications."],
+                "examples": [f"Basic examples of {topic} demonstrate its practical use."],
+                "applications": [f"{topic} has applications in various fields and industries."]
+            }
         }
+        subject_name = "general"
     
     # Get level-appropriate content
-    if level == "beginner":
-        concepts = topic_data["concepts"][:2] if len(topic_data["concepts"]) >= 2 else topic_data["concepts"]
-        examples = topic_data["examples"][:1] if topic_data["examples"] else []
-        applications = topic_data["applications"][:1] if topic_data["applications"] else []
-    elif level == "intermediate":
-        concepts = topic_data["concepts"][:3] if len(topic_data["concepts"]) >= 3 else topic_data["concepts"]
-        examples = topic_data["examples"][:2] if len(topic_data["examples"]) >= 2 else topic_data["examples"]
-        applications = topic_data["applications"][:2] if len(topic_data["applications"]) >= 2 else topic_data["applications"]
-    else:  # advanced
-        concepts = topic_data["concepts"]
-        examples = topic_data["examples"]
-        applications = topic_data["applications"]
+    level_content = topic_data.get(level.lower(), topic_data["beginner"])
+    concepts = level_content["concepts"]
+    examples = level_content["examples"]
+    applications = level_content["applications"]
     
+    # Generate topic-specific explanation
     explanation = f"""
 ## 🧠 {topic.title()} - {level.title()} Level Explanation
 
@@ -414,8 +824,8 @@ def generate_intelligent_explanation(topic, level, explanation_type, include_vis
     
     if explanation_type == "conceptual":
         explanation += f"""
-- **What it is**: {topic.title()} represents fundamental principles in its field
-- **Why it matters**: Understanding {topic.lower()} is crucial for advanced learning
+- **What it is**: {topic.title()} represents fundamental principles in {subject_name}
+- **Why it matters**: Understanding {topic.lower()} is crucial for advanced learning in {subject_name}
 - **Key insight**: It connects multiple related concepts together
 - **Core principle**: {concepts[0] if concepts else 'Fundamental understanding'}
 """
@@ -445,7 +855,7 @@ def generate_intelligent_explanation(topic, level, explanation_type, include_vis
     if include_examples and examples:
         explanation += f"""
 
-### 💡 Examples:
+### 💡 Specific Examples for {level.title()} Level:
 """
         for i, example in enumerate(examples, 1):
             explanation += f"{i}. **{example}**\n"
@@ -461,12 +871,12 @@ Imagine {topic.lower()} as a building with multiple floors. Each floor represent
         explanation += f"""
 
 ### 🤔 Chain of Thought:
-1. **Question**: What is {topic} and why is it important?
+1. **Question**: What is {topic} and why is it important in {subject_name}?
 2. **Analysis**: Let me break this down systematically
 3. **Understanding**: {concepts[0] if concepts else 'Core concept explanation'}
 4. **Connection**: This relates to other concepts because...
 5. **Application**: We use this in practice when...
-6. **Conclusion**: {topic.title()} is essential for understanding...
+6. **Conclusion**: {topic.title()} is essential for understanding {subject_name}...
 """
     
     if applications:
@@ -481,10 +891,13 @@ Imagine {topic.lower()} as a building with multiple floors. Each floor represent
 
 ### 📚 Next Steps:
 - Practice with progressively challenging problems
-- Connect {topic.lower()} to related concepts
+- Connect {topic.lower()} to related concepts in {subject_name}
 - Apply understanding to real-world scenarios
 - Explore advanced topics and research areas
 - Teach others to reinforce your own understanding
+
+### 🎯 Level-Appropriate Focus:
+For {level} level, focus on: {', '.join(concepts[:2])}
 """
     
     return explanation
@@ -506,9 +919,11 @@ def generate_intelligent_quiz(topic, difficulty, num_questions, question_type):
     if not topic_found:
         # Generate generic questions if topic not found
         topic_data = {
-            "concepts": [f"Understanding {topic} requires knowledge of fundamental principles"],
-            "examples": [f"Basic applications of {topic} demonstrate its utility"],
-            "applications": [f"{topic} has wide-ranging applications in various fields"]
+            "beginner": {
+                "concepts": [f"Understanding {topic} requires knowledge of fundamental principles"],
+                "examples": [f"Basic applications of {topic} demonstrate its utility"],
+                "applications": [f"{topic} has wide-ranging applications in various fields"]
+            }
         }
     
     # Generate different question types
