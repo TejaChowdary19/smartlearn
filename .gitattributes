@@ -1,0 +1,71 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Python files
+*.py text diff=python
+
+# Markdown files
+*.md text diff=markdown
+
+# Shell scripts
+*.sh text eol=lf
+
+# JSON files
+*.json text
+
+# YAML files
+*.yml text
+*.yaml text
+
+# Configuration files
+*.cfg text
+*.ini text
+*.conf text
+
+# Documentation
+*.txt text
+*.rst text
+
+# Binary files (should not be modified)
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.tar.gz binary
+*.rar binary
+
+# Model files (large binary files)
+*.bin binary
+*.safetensors binary
+*.ckpt binary
+*.pth binary
+*.pt binary
+
+# Database files
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Log files
+*.log text eol=lf
+
+# Temporary files
+*.tmp text
+*.temp text
+*.bak text
+*.backup text
+
+# IDE and editor files
+.vscode/* text
+.idea/* text
+*.swp text
+*.swo text
+*~ text
+
+# OS generated files
+.DS_Store binary
+Thumbs.db binary
+ehthumbs.db binary
