@@ -14542,5 +14542,365 @@
     "user_rating": 4.76130870637646,
     "timestamp": "2025-08-15T10:55:45.409397",
     "metadata": {}
+  },
+  {
+    "input_text": "Explain the concept of topic_0",
+    "target_text": "Here's a comprehensive explanation of topic_0...",
+    "subject": "mathematics",
+    "difficulty": "easy",
+    "user_rating": 3.6770086577958843,
+    "timestamp": "2025-08-15T13:14:55.430462",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I solve problem_type_1 problems?",
+    "target_text": "To solve problem_type_1 problems, follow these steps...",
+    "subject": "mathematics",
+    "difficulty": "medium",
+    "user_rating": 3.9342300859941712,
+    "timestamp": "2025-08-15T13:14:55.430466",
+    "metadata": {}
+  },
+  {
+    "input_text": "What is the difference between concept_2 and concept_3?",
+    "target_text": "The key differences between concept_2 and concept_3 are...",
+    "subject": "mathematics",
+    "difficulty": "hard",
+    "user_rating": 4.166294070086476,
+    "timestamp": "2025-08-15T13:14:55.430468",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain the concept of topic_3",
+    "target_text": "Here's a comprehensive explanation of topic_3...",
+    "subject": "mathematics",
+    "difficulty": "easy",
+    "user_rating": 4.691230526359836,
+    "timestamp": "2025-08-15T13:14:55.430469",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I solve problem_type_4 problems?",
+    "target_text": "To solve problem_type_4 problems, follow these steps...",
+    "subject": "mathematics",
+    "difficulty": "medium",
+    "user_rating": 3.768538596449276,
+    "timestamp": "2025-08-15T13:14:55.430471",
+    "metadata": {}
+  },
+  {
+    "input_text": "What is the difference between concept_5 and concept_6?",
+    "target_text": "The key differences between concept_5 and concept_6 are...",
+    "subject": "mathematics",
+    "difficulty": "hard",
+    "user_rating": 4.012018071574294,
+    "timestamp": "2025-08-15T13:14:55.430473",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain the concept of topic_6",
+    "target_text": "Here's a comprehensive explanation of topic_6...",
+    "subject": "mathematics",
+    "difficulty": "easy",
+    "user_rating": 4.1676193994366155,
+    "timestamp": "2025-08-15T13:14:55.430474",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I solve problem_type_7 problems?",
+    "target_text": "To solve problem_type_7 problems, follow these steps...",
+    "subject": "mathematics",
+    "difficulty": "medium",
+    "user_rating": 4.597044073731371,
+    "timestamp": "2025-08-15T13:14:55.430476",
+    "metadata": {}
+  },
+  {
+    "input_text": "What is the difference between concept_8 and concept_9?",
+    "target_text": "The key differences between concept_8 and concept_9 are...",
+    "subject": "mathematics",
+    "difficulty": "hard",
+    "user_rating": 3.7021655548931647,
+    "timestamp": "2025-08-15T13:14:55.430477",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain the concept of topic_9",
+    "target_text": "Here's a comprehensive explanation of topic_9...",
+    "subject": "mathematics",
+    "difficulty": "easy",
+    "user_rating": 4.4632381030677655,
+    "timestamp": "2025-08-15T13:14:55.430478",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I solve problem_type_10 problems?",
+    "target_text": "To solve problem_type_10 problems, follow these steps...",
+    "subject": "mathematics",
+    "difficulty": "medium",
+    "user_rating": 4.352109179629144,
+    "timestamp": "2025-08-15T13:14:55.430480",
+    "metadata": {}
+  },
+  {
+    "input_text": "What is the difference between concept_11 and concept_12?",
+    "target_text": "The key differences between concept_11 and concept_12 are...",
+    "subject": "mathematics",
+    "difficulty": "hard",
+    "user_rating": 4.644693050377331,
+    "timestamp": "2025-08-15T13:14:55.430481",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain the concept of topic_12",
+    "target_text": "Here's a comprehensive explanation of topic_12...",
+    "subject": "mathematics",
+    "difficulty": "easy",
+    "user_rating": 3.781343831512252,
+    "timestamp": "2025-08-15T13:14:55.430482",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I solve problem_type_13 problems?",
+    "target_text": "To solve problem_type_13 problems, follow these steps...",
+    "subject": "mathematics",
+    "difficulty": "medium",
+    "user_rating": 4.804124030178726,
+    "timestamp": "2025-08-15T13:14:55.430484",
+    "metadata": {}
+  },
+  {
+    "input_text": "What is the difference between concept_14 and concept_15?",
+    "target_text": "The key differences between concept_14 and concept_15 are...",
+    "subject": "mathematics",
+    "difficulty": "hard",
+    "user_rating": 4.371778155974935,
+    "timestamp": "2025-08-15T13:14:55.430485",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain the concept of topic_15",
+    "target_text": "Here's a comprehensive explanation of topic_15...",
+    "subject": "mathematics",
+    "difficulty": "easy",
+    "user_rating": 4.35731057163328,
+    "timestamp": "2025-08-15T13:14:55.430487",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I solve problem_type_16 problems?",
+    "target_text": "To solve problem_type_16 problems, follow these steps...",
+    "subject": "mathematics",
+    "difficulty": "medium",
+    "user_rating": 4.265862986585558,
+    "timestamp": "2025-08-15T13:14:55.430488",
+    "metadata": {}
+  },
+  {
+    "input_text": "What is the difference between concept_17 and concept_18?",
+    "target_text": "The key differences between concept_17 and concept_18 are...",
+    "subject": "mathematics",
+    "difficulty": "hard",
+    "user_rating": 4.367671602767359,
+    "timestamp": "2025-08-15T13:14:55.430490",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain the concept of topic_18",
+    "target_text": "Here's a comprehensive explanation of topic_18...",
+    "subject": "mathematics",
+    "difficulty": "easy",
+    "user_rating": 4.463115622818465,
+    "timestamp": "2025-08-15T13:14:55.430491",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I solve problem_type_19 problems?",
+    "target_text": "To solve problem_type_19 problems, follow these steps...",
+    "subject": "mathematics",
+    "difficulty": "medium",
+    "user_rating": 4.773446105893086,
+    "timestamp": "2025-08-15T13:14:55.430492",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I implement algorithm_0?",
+    "target_text": "Here's how to implement algorithm_0...",
+    "subject": "computer_science",
+    "difficulty": "easy",
+    "user_rating": 3.558520068016684,
+    "timestamp": "2025-08-15T13:14:55.464811",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain concept_1 in programming",
+    "target_text": "In programming, concept_1 refers to...",
+    "subject": "computer_science",
+    "difficulty": "medium",
+    "user_rating": 3.561726183926474,
+    "timestamp": "2025-08-15T13:14:55.464813",
+    "metadata": {}
+  },
+  {
+    "input_text": "What are the best practices for topic_2?",
+    "target_text": "Best practices for topic_2 include...",
+    "subject": "computer_science",
+    "difficulty": "hard",
+    "user_rating": 4.774768188439567,
+    "timestamp": "2025-08-15T13:14:55.464814",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I implement algorithm_3?",
+    "target_text": "Here's how to implement algorithm_3...",
+    "subject": "computer_science",
+    "difficulty": "easy",
+    "user_rating": 3.736521209007413,
+    "timestamp": "2025-08-15T13:14:55.464816",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain concept_4 in programming",
+    "target_text": "In programming, concept_4 refers to...",
+    "subject": "computer_science",
+    "difficulty": "medium",
+    "user_rating": 4.722205950730318,
+    "timestamp": "2025-08-15T13:14:55.464817",
+    "metadata": {}
+  },
+  {
+    "input_text": "What are the best practices for topic_5?",
+    "target_text": "Best practices for topic_5 include...",
+    "subject": "computer_science",
+    "difficulty": "hard",
+    "user_rating": 4.050089709104504,
+    "timestamp": "2025-08-15T13:14:55.464818",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I implement algorithm_6?",
+    "target_text": "Here's how to implement algorithm_6...",
+    "subject": "computer_science",
+    "difficulty": "easy",
+    "user_rating": 4.8420631772819664,
+    "timestamp": "2025-08-15T13:14:55.464819",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain concept_7 in programming",
+    "target_text": "In programming, concept_7 refers to...",
+    "subject": "computer_science",
+    "difficulty": "medium",
+    "user_rating": 4.470088373669554,
+    "timestamp": "2025-08-15T13:14:55.464821",
+    "metadata": {}
+  },
+  {
+    "input_text": "What are the best practices for topic_8?",
+    "target_text": "Best practices for topic_8 include...",
+    "subject": "computer_science",
+    "difficulty": "hard",
+    "user_rating": 3.653681423282538,
+    "timestamp": "2025-08-15T13:14:55.464822",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I implement algorithm_9?",
+    "target_text": "Here's how to implement algorithm_9...",
+    "subject": "computer_science",
+    "difficulty": "easy",
+    "user_rating": 4.157910525347222,
+    "timestamp": "2025-08-15T13:14:55.464823",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain concept_10 in programming",
+    "target_text": "In programming, concept_10 refers to...",
+    "subject": "computer_science",
+    "difficulty": "medium",
+    "user_rating": 3.5687055708537763,
+    "timestamp": "2025-08-15T13:14:55.464824",
+    "metadata": {}
+  },
+  {
+    "input_text": "What are the best practices for topic_11?",
+    "target_text": "Best practices for topic_11 include...",
+    "subject": "computer_science",
+    "difficulty": "hard",
+    "user_rating": 3.961596605216771,
+    "timestamp": "2025-08-15T13:14:55.464826",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I implement algorithm_12?",
+    "target_text": "Here's how to implement algorithm_12...",
+    "subject": "computer_science",
+    "difficulty": "easy",
+    "user_rating": 4.703928770283599,
+    "timestamp": "2025-08-15T13:14:55.464827",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain concept_13 in programming",
+    "target_text": "In programming, concept_13 refers to...",
+    "subject": "computer_science",
+    "difficulty": "medium",
+    "user_rating": 4.664081349898675,
+    "timestamp": "2025-08-15T13:14:55.464828",
+    "metadata": {}
+  },
+  {
+    "input_text": "What are the best practices for topic_14?",
+    "target_text": "Best practices for topic_14 include...",
+    "subject": "computer_science",
+    "difficulty": "hard",
+    "user_rating": 3.691572345048409,
+    "timestamp": "2025-08-15T13:14:55.464829",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I implement algorithm_15?",
+    "target_text": "Here's how to implement algorithm_15...",
+    "subject": "computer_science",
+    "difficulty": "easy",
+    "user_rating": 3.533276864591161,
+    "timestamp": "2025-08-15T13:14:55.464831",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain concept_16 in programming",
+    "target_text": "In programming, concept_16 refers to...",
+    "subject": "computer_science",
+    "difficulty": "medium",
+    "user_rating": 4.285746385972553,
+    "timestamp": "2025-08-15T13:14:55.464832",
+    "metadata": {}
+  },
+  {
+    "input_text": "What are the best practices for topic_17?",
+    "target_text": "Best practices for topic_17 include...",
+    "subject": "computer_science",
+    "difficulty": "hard",
+    "user_rating": 3.896368722117052,
+    "timestamp": "2025-08-15T13:14:55.464833",
+    "metadata": {}
+  },
+  {
+    "input_text": "How do I implement algorithm_18?",
+    "target_text": "Here's how to implement algorithm_18...",
+    "subject": "computer_science",
+    "difficulty": "easy",
+    "user_rating": 4.679624968876693,
+    "timestamp": "2025-08-15T13:14:55.464835",
+    "metadata": {}
+  },
+  {
+    "input_text": "Explain concept_19 in programming",
+    "target_text": "In programming, concept_19 refers to...",
+    "subject": "computer_science",
+    "difficulty": "medium",
+    "user_rating": 4.8216116855082545,
+    "timestamp": "2025-08-15T13:14:55.464836",
+    "metadata": {}
   }
 ]

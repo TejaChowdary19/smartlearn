@@ -4,7 +4,12 @@ import json, re
 from typing import Optional
 from pydantic import BaseModel
 from dotenv import load_dotenv
-import ollama
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
+    print("⚠️ Ollama not available. Using fallback LLM provider.")
 
 load_dotenv()
 
@@ -70,6 +75,10 @@ class LLM(BaseModel):
     model: str = DEFAULT_MODEL
 
     def complete(self, prompt: str, temperature: float = 0.4, max_tokens: int = 800) -> str:
+        if not OLLAMA_AVAILABLE:
+            # Fallback response when ollama is not available
+            return f"I'm sorry, but the AI model service is currently unavailable in this environment. Please try using the local version of SmartLearn or contact support for assistance.\n\nYour question was: {prompt}"
+        
         system_msg = "You are a helpful educational assistant. Keep answers clear and age-appropriate."
         full = f"{system_msg}\n\nUser: {prompt}\nAssistant:"
         resp = ollama.generate(
@@ -88,6 +97,14 @@ class LLM(BaseModel):
         Use Ollama JSON mode. If the model returns invalid JSON, try to repair/extract.
         Retries a couple of times with slightly different nudges.
         """
+        if not OLLAMA_AVAILABLE:
+            # Fallback response when ollama is not available
+            return {
+                "error": "AI model service unavailable",
+                "message": "The AI model service is currently unavailable in this environment. Please try using the local version of SmartLearn.",
+                "fallback_data": {"items": []}
+            }
+        
         system_msg = "You are a helpful educational assistant. Only return valid JSON for structured tasks."
         for k in range(attempts):
             full = f"{system_msg}\n\nUser: {prompt}\nAssistant:"
