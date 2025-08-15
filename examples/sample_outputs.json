@@ -1,0 +1,41 @@
+{
+  "study_plan_example": {
+    "subject": "Algebra",
+    "level": "10th grade",
+    "minutes_per_day": 30,
+    "duration_days": 7,
+    "plan": [
+      "Day 1: Linear Equations",
+      "Day 2: Inequalities",
+      "Day 3: Functions",
+      "Day 4: Slope",
+      "Day 5: Systems",
+      "Day 6: Quadratics",
+      "Day 7: Review"
+    ]
+  },
+  "quiz_example": [
+    {
+      "q": "Solve: 2x + 5 = 15",
+      "options": [
+        "3",
+        "4",
+        "5",
+        "10"
+      ],
+      "answer": "5",
+      "difficulty": 1
+    },
+    {
+      "q": "Slope of line through (2,3) and (6,11)?",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answer": "2",
+      "difficulty": 2
+    }
+  ]
+}
