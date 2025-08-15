@@ -1,8 +1,32 @@
-# SmartLearn Cloud-Optimized Requirements
-# Minimal dependencies for cloud deployment
+# SmartLearn Requirements for Full Functionality
+# All dependencies needed for the working app
 
 # Core Streamlit
 streamlit>=1.28.0
 
-# Basic utilities
+# Environment and utilities
 python-dotenv>=1.0.0
+
+# AI and ML libraries
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+
+# Vector database and RAG
+chromadb>=0.4.0
+langchain>=0.0.300
+langchain-community>=0.0.10
+
+# Data processing
+pandas>=1.5.0
+numpy>=1.24.0
+
+# Visualization
+plotly>=5.15.0
+altair>=5.0.0
+
+# System monitoring
+psutil>=5.9.0
+
+# Optional: Ollama (will be handled gracefully if not available)
+# ollama>=0.1.0
