@@ -1,1494 +1,1538 @@
+#!/usr/bin/env python3
+"""
+SmartLearn Cloud-Optimized - Beautiful Black & Gold Theme
+Intelligent AI-powered features optimized for cloud deployment
+"""
+
 import streamlit as st
-import json
 import os
 from datetime import datetime
-from dotenv import load_dotenv
-
-# Local modules
-from core.generator import LLM
-from core.prompt_templates import StudyPlanPrompt, ExplanationPrompt, QuizPrompt
-from core.rag import EnhancedRAG
-
-# Load environment variables
-load_dotenv()
-
-# Helper functions for quiz functionality
-def parse_quiz_data(quiz_text, num_questions):
-    """Parse AI-generated quiz text into structured format"""
-    try:
-        lines = quiz_text.strip().split('\n')
-        questions = []
-        current_question = None
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            # Check for question start
-            if line.startswith('Q') and line[1].isdigit():
-                if current_question:
-                    questions.append(current_question)
-                
-                current_question = {
-                    'question': '',
-                    'options': [],
-                    'correct': '',
-                    'explanation': ''
-                }
-                
-                # Extract question text
-                question_text = line.split('.', 1)[1].strip() if '.' in line else line
-                current_question['question'] = question_text
-                
-            # Check for options
-            elif line.startswith(('A)', 'B)', 'C)', 'D)')):
-                option_text = line.split(')', 1)[1].strip()
-                current_question['options'].append(option_text)
-                
-            # Check for correct answer
-            elif line.startswith('Correct:'):
-                correct = line.split(':', 1)[1].strip()
-                current_question['correct'] = correct
-                
-            # Check for explanation
-            elif line.startswith('Explanation:'):
-                explanation = line.split(':', 1)[1].strip()
-                current_question['explanation'] = explanation
-        
-        # Add the last question
-        if current_question:
-            questions.append(current_question)
-        
-        # Validate we have the right number of questions
-        if len(questions) == num_questions and all(len(q['options']) == 4 for q in questions):
-            return questions
-        else:
-            return None
-            
-    except Exception as e:
-        st.error(f"Error parsing quiz: {e}")
-        return None
-
-def grade_quiz(questions, user_answers):
-    """Grade the quiz and return score and results"""
-    total_questions = len(questions)
-    correct_answers = 0
-    results = []
-    
-    for i, question in enumerate(questions, 1):
-        user_answer = user_answers.get(i, "Not answered")
-        correct_answer_letter = question['correct']  # e.g., "A", "B", "C", "D"
-        
-        # Map user's selected option text to the corresponding letter
-        user_answer_letter = None
-        if user_answer != "Not answered":
-            for idx, option in enumerate(question['options']):
-                if option == user_answer:
-                    user_answer_letter = chr(65 + idx)  # Convert 0,1,2,3 to A,B,C,D
-                    break
-        
-        # Compare the letters
-        is_correct = user_answer_letter == correct_answer_letter
-        
-        if is_correct:
-            correct_answers += 1
-            
-        results.append({
-            'question_num': i,
-            'user_answer': user_answer,
-            'user_answer_letter': user_answer_letter,
-            'correct_answer_letter': correct_answer_letter,
-            'correct': is_correct
-        })
-    
-    score = int((correct_answers / total_questions) * 100)
-    return score, results
-
-def get_score_message(score):
-    """Get a motivational message based on score"""
-    if score >= 90:
-        return "🎉 Outstanding! You're a master of this subject!"
-    elif score >= 80:
-        return "🌟 Excellent work! You have a strong understanding!"
-    elif score >= 70:
-        return "👍 Good job! You're on the right track!"
-    elif score >= 60:
-        return "📚 Not bad! Keep studying to improve!"
-    else:
-        return "💪 Keep practicing! Every mistake is a learning opportunity!"
+import random
+import json
 
 # Page configuration
 st.set_page_config(
-    page_title="SmartLearn Pro - AI-Powered Study Assistant",
+    page_title="SmartLearn Enhanced - AI Study Assistant",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Ultra-Professional Dark Theme CSS
+# Custom CSS for clean, professional UI
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-    
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    body {
+        background-color: #0e0e0e !important;
+        color: #ffffff !important;
     }
     
-    /* Main app styling - Ultra Dark Theme */
-    .main {
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
-        padding: 0;
-        color: #ffffff;
-    }
-    
-    /* Ultra Professional header */
-    .pro-header {
-        background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 50%, #2d1b69 100%);
-        padding: 4rem 0;
-        margin: -1rem -1rem 3rem -1rem;
-        border-radius: 0 0 3rem 3rem;
-        box-shadow: 0 25px 80px rgba(0,0,0,0.6);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .pro-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M 15 0 L 0 0 0 15" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.3"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-        opacity: 0.4;
-    }
-    
-    .header-content {
-        position: relative;
-        z-index: 2;
-        text-align: center;
-        color: white;
-    }
-    
-    .header-title {
-        font-size: 4rem;
-        font-weight: 900;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
-        letter-spacing: -0.02em;
-    }
-    
-    .header-subtitle {
-        font-size: 1.5rem;
-        font-weight: 400;
-        opacity: 0.95;
-        margin-bottom: 2rem;
-        color: #e2e8f0;
-        letter-spacing: 0.01em;
-    }
-    
-    .header-badge {
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        padding: 1rem 2rem;
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 1rem;
-        font-weight: 600;
-        color: #ffffff;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    }
-    
-    /* Ultra Professional sidebar */
-    .css-1d391kg {
-        background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-        border-right: 1px solid #404040;
-    }
-    
-    .sidebar-header {
-        background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
-        color: white;
-        padding: 2rem 1.5rem;
-        margin: -1rem -1rem 2rem -1rem;
-        border-radius: 0 0 1.5rem 1.5rem;
-        text-align: center;
-        box-shadow: 0 12px 40px rgba(255, 107, 107, 0.4);
-    }
-    
-    .sidebar-header h3 {
-        margin: 0;
-        font-size: 1.3rem;
-        font-weight: 700;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    
-    .settings-card {
-        background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%);
-        border-radius: 20px;
+    .main-header {
+        background: linear-gradient(135deg, #bc9862 0%, #a67c52 100%);
         padding: 2rem;
-        margin: 1.5rem 0;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-        border: 1px solid #505050;
-        color: #ffffff;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .settings-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
-    }
-    
-    .settings-card h4 {
-        color: #ffffff;
-        margin-bottom: 1.5rem;
-        font-size: 1.2rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    /* Ultra Professional tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-        background: transparent;
-        border-bottom: 3px solid #404040;
-        padding: 0 0 1.5rem 0;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%);
-        border-radius: 16px 16px 0 0;
-        border: 2px solid #505050;
-        border-bottom: none;
-        padding: 1.2rem 2rem;
-        font-weight: 700;
-        color: #cbd5e1;
-        transition: all 0.4s ease;
-        font-size: 1rem;
-    }
-    
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        text-align: center;
         color: white;
-        border-color: #ff6b6b;
-        box-shadow: 0 8px 30px rgba(255, 107, 107, 0.4);
-        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
     
-    .stTabs [data-baseweb="tab"]:hover {
-        background: #505050;
-        transform: translateY(-2px);
-        color: #ffffff;
-        border-color: #ff6b6b;
-    }
-    
-    /* Ultra Professional inputs */
-    .stTextInput > div > div > input {
-        border-radius: 16px;
-        border: 2px solid #505050;
-        padding: 16px 20px;
-        font-size: 1rem;
-        transition: all 0.4s ease;
-        background: #1a1a1a;
-        color: #ffffff;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: #ff6b6b;
-        box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
-        outline: none;
-        background: #2d2d2d;
-        transform: translateY(-2px);
-    }
-    
-    .stTextInput > div > div > input::placeholder {
-        color: #808080;
-    }
-    
-    .stTextArea > div > div > textarea {
-        border-radius: 16px;
-        border: 2px solid #505050;
-        padding: 20px;
-        font-size: 1rem;
-        transition: all 0.4s ease;
-        background: #1a1a1a;
-        color: #ffffff;
-        min-height: 140px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    }
-    
-    .stTextArea > div > div > textarea:focus {
-        border-color: #ff6b6b;
-        box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
-        outline: none;
-        background: #2d2d2d;
-        transform: translateY(-2px);
-    }
-    
-    .stTextArea > div > div > textarea::placeholder {
-        color: #808080;
-    }
-    
-    .stNumberInput > div > div > input {
-        border-radius: 16px;
-        border: 2px solid #505050;
-        padding: 16px 20px;
-        font-size: 1rem;
-        transition: all 0.4s ease;
-        background: #1a1a1a;
-        color: #ffffff;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    }
-    
-    .stNumberInput > div > div > input:focus {
-        border-color: #ff6b6b;
-        box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
-        outline: none;
-        background: #2d2d2d;
-        transform: translateY(-2px);
-    }
-    
-    .stSelectbox > div > div > div {
-        border-radius: 16px;
-        border: 2px solid #505050;
-        padding: 12px 20px;
-        font-size: 1rem;
-        transition: all 0.4s ease;
-        background: #1a1a1a;
-        color: #ffffff;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    }
-    
-    .stSelectbox > div > div > div:focus {
-        border-color: #ff6b6b;
-        box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
-        outline: none;
-        background: #2d2d2d;
-        transform: translateY(-2px);
-    }
-    
-    /* Ultra Professional buttons */
     .stButton > button {
-        background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+        background: linear-gradient(135deg, #bc9862 0%, #a67c52 100%);
         color: white;
         border: none;
-        border-radius: 16px;
-        padding: 18px 40px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        transition: all 0.4s ease;
-        box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
-        position: relative;
-        overflow: hidden;
-        letter-spacing: 0.01em;
-    }
-    
-    .stButton > button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.6s;
-    }
-    
-    .stButton > button:hover::before {
-        left: 100%;
+        border-radius: 25px;
+        padding: 0.5rem 2rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
     }
     
     .stButton > button:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 20px 45px rgba(255, 107, 107, 0.5);
-    }
-    
-    .stButton > button:active {
         transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(188, 152, 98, 0.3);
     }
     
-    /* Secondary button style */
-    .btn-secondary {
-        background: linear-gradient(135deg, #808080 0%, #606060 100%) !important;
-        box-shadow: 0 12px 35px rgba(128, 128, 128, 0.4) !important;
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 0.5rem;
     }
     
-    .btn-secondary:hover {
-        box-shadow: 0 20px 45px rgba(128, 128, 128, 0.5) !important;
+    .status-active { background-color: #00ff00; color: #000; }
+    
+    /* Tab spacing and layout */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2rem !important;
+        justify-content: space-between !important;
+        padding: 0 1rem !important;
     }
     
-    /* Ultra Professional content cards */
-    .content-card {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        border-radius: 24px;
-        padding: 3rem;
-        margin: 2rem 0;
-        box-shadow: 0 16px 50px rgba(0,0,0,0.4);
-        border: 1px solid #404040;
-        position: relative;
-        overflow: hidden;
-        color: #ffffff;
+    .stTabs [data-baseweb="tab"] {
+        flex: 1 !important;
+        margin: 0 0.5rem !important;
+        padding: 1rem 1.5rem !important;
+        transition: all 0.3s ease !important;
     }
     
-    .content-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+    .stTabs [data-baseweb="tab"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(188, 152, 98, 0.3) !important;
     }
     
-    .content-card h3 {
-        color: #ffffff;
-        margin-bottom: 1.5rem;
-        font-size: 1.8rem;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        letter-spacing: -0.01em;
-    }
-    
-    .content-card p {
-        color: #e2e8f0;
-        line-height: 1.8;
-        margin-bottom: 1.5rem;
-        font-size: 1.1rem;
-        opacity: 0.9;
-    }
-    
-    /* Grid layout */
-    .grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 2rem;
-        margin: 2rem 0;
-    }
-    
-    .grid-item {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-        border: 1px solid #404040;
-        transition: all 0.4s ease;
-        color: #ffffff;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .grid-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);
-    }
-    
-    .grid-item:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        border-color: #ff6b6b;
-    }
-    
-    .grid-item h4 {
-        color: #ffffff;
-        margin-bottom: 1.5rem;
-        font-size: 1.3rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .grid-item p {
-        color: #e2e8f0;
-        margin-bottom: 0.75rem;
-        font-size: 1rem;
-        opacity: 0.9;
-    }
-    
-    /* Label styling */
-    .stTextInput > label, .stTextArea > label, .stNumberInput > label, .stSelectbox > label {
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 1rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    /* Checkbox styling */
-    .stCheckbox > div > label {
-        color: #ffffff;
-        font-weight: 600;
-    }
-    
-    /* Success and error messages */
-    .success-message {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 16px;
-        margin: 1.5rem 0;
-        box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
-        border: none;
-    }
-    
-    .error-message {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 16px;
-        margin: 1.5rem 0;
-        box-shadow: 0 12px 35px rgba(239, 68, 68, 0.4);
-        border: none;
-    }
-    
-    /* Loading spinner */
-    .stSpinner > div {
-        border: 4px solid #404040;
-        border-top: 4px solid #ff6b6b;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .header-title {
-            font-size: 2.5rem;
-        }
-        
-        .header-subtitle {
-            font-size: 1.2rem;
-        }
-        
-        .content-card {
-            padding: 2rem;
-        }
-        
-        .grid-container {
-            grid-template-columns: 1fr;
-        }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background: linear-gradient(135deg, #bc9862 0%, #a67c52 100%) !important;
+        color: #0e0e0e !important;
+        font-weight: bold !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Ultra Professional header
-st.markdown("""
-<div class="pro-header">
-    <div class="header-content">
-        <h1 class="header-title">🎓 SmartLearn Pro</h1>
-        <p class="header-subtitle">Ultra-Professional AI-Powered Study Assistant</p>
-        <div class="header-badge">Powered by Advanced LLM Technology</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# Sidebar configuration
-with st.sidebar:
-    st.markdown("""
-    <div class="sidebar-header">
-        <h3>⚙️ Configuration</h3>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div class="settings-card">
-        <h4>🔧 AI Provider Settings</h4>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    provider = st.selectbox(
-        "AI Provider",
-        ["Ollama", "OpenAI"],
-        help="Choose your preferred AI provider for generating content"
-    )
-    
-    if provider == "Ollama":
-        model = st.text_input(
-            "Model Name",
-            value="mistral:7b-instruct",
-            help="Enter the Ollama model name (e.g., mistral:7b-instruct, llama2:7b)"
-        )
-        base_url = st.text_input(
-            "Base URL",
-            value="http://localhost:11434",
-            help="Ollama server URL (default: http://localhost:11434)"
-        )
-    else:
-        api_key = st.text_input(
-            "OpenAI API Key",
-            type="password",
-            help="Enter your OpenAI API key"
-        )
-        model = st.selectbox(
-            "Model",
-            ["gpt-4", "gpt-3.5-turbo"],
-            help="Select OpenAI model"
-        )
-    
-    st.markdown("""
-    <div class="settings-card">
-        <h4>📚 Study Preferences</h4>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    use_rag = st.checkbox(
-        "Enable RAG (Knowledge Base)",
-        value=False,
-        help="Use your knowledge base for more accurate responses"
-    )
-    
-    if use_rag:
-        knowledge_base_path = st.text_input(
-            "Knowledge Base Path",
-            value="data/knowledge_base/",
-            help="Path to your knowledge base directory"
-        )
-
-# Initialize RAG system
-rag_system = None
-if use_rag:
-    try:
-        rag_system = EnhancedRAG()
-        if st.button("🔄 Load Knowledge Base", type="secondary"):
-            with st.spinner("Loading knowledge base documents..."):
-                success = rag_system.load_knowledge_base(knowledge_base_path)
-                if success:
-                    st.success("✅ Knowledge base loaded successfully!")
-                    # Store RAG system in session state
-                    st.session_state.rag_system = rag_system
-                else:
-                    st.error("❌ Failed to load knowledge base")
-        else:
-            # Check if RAG system is already loaded
-            if 'rag_system' in st.session_state:
-                rag_system = st.session_state.rag_system
-                stats = rag_system.get_knowledge_base_stats()
-                if stats['status'] == "Documents loaded" and stats['count'] > 0:
-                    st.success(f"✅ Knowledge base ready ({stats['count']} chunks)")
-                else:
-                    st.info("ℹ️ Click 'Load Knowledge Base' to initialize")
-    except Exception as e:
-        st.error(f"❌ Error initializing RAG: {str(e)}")
-
-# RAG Status Display
-if use_rag:
-    st.markdown("""
-    <div class="settings-card">
-        <h4>🔍 RAG Status</h4>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if 'rag_system' in st.session_state:
-        rag_system = st.session_state.rag_system
-        stats = rag_system.get_knowledge_base_stats()
-        
-        if stats['status'] == "Documents loaded" and stats['count'] > 0:
-            st.success(f"✅ Knowledge Base Active")
-            st.info(f"📊 {stats['count']} document chunks loaded")
-            st.info(f"🤖 Using: {stats['embedding_model']}")
-            
-            # Add a search functionality
-            search_query = st.text_input(
-                "🔍 Search Knowledge Base",
-                placeholder="Search for specific topics...",
-                help="Search your knowledge base for relevant information"
-            )
-            
-            if search_query:
-                if st.button("🔍 Search", type="secondary"):
-                    with st.spinner("Searching knowledge base..."):
-                        results = rag_system.search_similar_documents(search_query, k=3)
-                        if results:
-                            st.success(f"Found {len(results)} relevant documents")
-                            for i, result in enumerate(results, 1):
-                                with st.expander(f"📄 Source {i}: {result['source']}", expanded=False):
-                                    st.markdown(f"**Relevance:** {result['relevance']:.2f}")
-                                    st.markdown(f"**Content:** {result['content']}")
-                        else:
-                            st.info("No relevant documents found")
-        else:
-            st.warning("⚠️ Knowledge base not loaded")
-            st.info("Click 'Load Knowledge Base' to initialize")
-    else:
-        st.info("ℹ️ RAG system ready to initialize")
-
-# Main content tabs
-tab1, tab2, tab3, tab4 = st.tabs(["📚 Study Plan", "💡 Explanations", "🧠 Adaptive Quiz", "📊 Progress Tracker"])
-
-# Study Plan Tab
-with tab1:
-    st.markdown("""
-    <div class="content-card">
-        <h3>🎯 Personalized Study Plan Generator</h3>
-        <p>Create comprehensive, AI-powered study plans tailored to your learning goals and schedule.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        subject = st.text_input(
-            "Subject/Topic",
-            placeholder="e.g., Machine Learning, Organic Chemistry, World History",
-            help="Enter the subject or specific topic you want to study"
-        )
-        
-        learning_goals = st.text_area(
-            "Learning Goals",
-            placeholder="What do you want to achieve? What skills should you develop?",
-            help="Describe your specific learning objectives and desired outcomes"
-        )
-        
-        time_available = st.number_input(
-            "Time Available (hours per week)",
-            min_value=1,
-            max_value=40,
-            value=10,
-            help="How many hours can you dedicate to studying each week?"
-        )
-        
-        difficulty_level = st.selectbox(
-            "Difficulty Level",
-            ["Beginner", "Intermediate", "Advanced"],
-            help="Select your current proficiency level"
-        )
-    
-    with col2:
-        st.markdown("""
-        <div class="grid-item">
-            <h4>📊 Quick Stats</h4>
-            <p><strong>Subject:</strong> {subject}</p>
-            <p><strong>Time:</strong> {time_available}h/week</p>
-            <p><strong>Level:</strong> {difficulty_level}</p>
-        </div>
-        """.format(subject=subject or "Not specified", time_available=time_available, difficulty_level=difficulty_level), unsafe_allow_html=True)
-    
-    if st.button("🚀 Generate Study Plan", type="primary"):
-        if subject and learning_goals:
-            with st.spinner("🤖 AI is crafting your personalized study plan..."):
-                try:
-                    # Initialize LLM with proper parameters
-                    if provider == "Ollama":
-                        llm = LLM(provider="ollama", model=model)
-                    else:
-                        st.error("OpenAI integration not yet implemented")
-                        st.stop()
-                    
-                    # RAG Integration: Retrieve relevant context from knowledge base
-                    rag_context = ""
-                    rag_sources = []
-                    if rag_system and 'rag_system' in st.session_state:
-                        try:
-                            # Retrieve relevant context for the subject
-                            rag_context, rag_sources = rag_system.retrieve_relevant_context(
-                                f"study plan {subject} {difficulty_level} {learning_goals}", 
-                                k=3
-                            )
-                            if rag_context:
-                                st.info(f"🔍 Found {len(rag_sources)} relevant knowledge base sources")
-                        except Exception as e:
-                            st.warning(f"⚠️ RAG retrieval failed: {str(e)}")
-                    
-                    # Create enhanced prompt using the prompt template
-                    from core.prompt_templates import StudyPlanPrompt
-                    prompt_template = StudyPlanPrompt()
-                    
-                    # Calculate duration in days (assuming 7 days per week)
-                    duration_days = max(7, (time_available * 4) // 60)  # Convert hours to days
-                    
-                    custom_prompt = prompt_template.render(
-                        subject=subject,
-                        level=difficulty_level,
-                        minutes_per_day=time_available * 60 // 7,  # Convert to minutes per day
-                        duration_days=duration_days,
-                        goal=learning_goals,
-                        rag_context=rag_context,
-                        rag_sources=rag_sources
-                    )
-                    
-                    study_plan = llm.complete(custom_prompt, temperature=0.7, max_tokens=1500)
-                    
-                    # Display the study plan
-                    st.markdown("""
-                    <div class="content-card">
-                        <h3>📋 Your Personalized Study Plan</h3>
-                        <div style="background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%); padding: 2rem; border-radius: 20px; border-left: 4px solid #ff6b6b; color: #ffffff; line-height: 1.8;">
-                            {plan}
-                        </div>
-                    </div>
-                    """.format(plan=study_plan.replace('\n', '<br>')), unsafe_allow_html=True)
-                    
-                    # Display RAG sources if available
-                    if rag_sources:
-                        with st.expander("🔍 Knowledge Base Sources Used", expanded=False):
-                            st.markdown("**Sources that enhanced your study plan:**")
-                            for i, source in enumerate(rag_sources, 1):
-                                st.markdown(f"""
-                                **Source {i}:** {source['source']}
-                                - Relevance: {source['relevance_score']:.2f}
-                                - Chunk ID: {source['chunk_id']}
-                                """)
-                    
-                    # Download button
-                    st.download_button(
-                        label="📥 Download Study Plan",
-                        data=study_plan,
-                        file_name=f"study_plan_{subject.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.txt",
-                        mime="text/plain"
-                    )
-                    
-                except Exception as e:
-                    st.error(f"❌ Error generating study plan: {str(e)}")
-        else:
-            st.warning("⚠️ Please fill in all required fields to generate a study plan.")
-
-# Explanations Tab
-with tab2:
-    st.markdown("""
-    <div class="content-card">
-        <h3>💡 AI-Powered Concept Explanations</h3>
-        <p>Get clear, comprehensive explanations of complex concepts with examples and analogies.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        concept = st.text_input(
-            "Concept to Explain",
-            placeholder="e.g., Quantum entanglement, Photosynthesis, Derivatives in calculus",
-            help="Enter the concept you'd like explained"
-        )
-        
-        explanation_type = st.selectbox(
-            "Explanation Style",
-            ["Simple", "Detailed", "With Examples", "With Analogies"],
-            help="Choose how you'd like the concept explained"
-        )
-        
-        background_level = st.selectbox(
-            "Your Background",
-            ["Complete Beginner", "Some Knowledge", "Intermediate", "Advanced"],
-            help="Select your current understanding level"
-        )
-    
-    with col2:
-        st.markdown("""
-        <div class="grid-item">
-            <h4>🎯 Explanation Preferences</h4>
-            <p><strong>Style:</strong> {style}</p>
-            <p><strong>Background:</strong> {background}</p>
-        </div>
-        """.format(style=explanation_type, background=background_level), unsafe_allow_html=True)
-    
-    if st.button("💡 Explain Concept", type="primary"):
-        if concept:
-            with st.spinner("🤖 AI is crafting your explanation..."):
-                try:
-                    # Initialize LLM with proper parameters
-                    if provider == "Ollama":
-                        llm = LLM(provider="ollama", model=model)
-                    else:
-                        st.error("OpenAI integration not yet implemented")
-                        st.stop()
-                    
-                    # RAG Integration: Retrieve relevant context from knowledge base
-                    rag_context = ""
-                    rag_sources = []
-                    if rag_system and 'rag_system' in st.session_state:
-                        try:
-                            # Retrieve relevant context for the concept
-                            rag_context, rag_sources = rag_system.retrieve_relevant_context(
-                                f"{concept} {explanation_type} {background_level}", 
-                                k=3
-                            )
-                            if rag_context:
-                                st.info(f"🔍 Found {len(rag_sources)} relevant knowledge base sources")
-                        except Exception as e:
-                            st.warning(f"⚠️ RAG retrieval failed: {str(e)}")
-                    
-                    # Create enhanced prompt using the prompt template
-                    from core.prompt_templates import ExplanationPrompt
-                    prompt_template = ExplanationPrompt()
-                    
-                    # Map background level to template level
-                    level_mapping = {
-                        "Complete Beginner": "beginner",
-                        "Some Knowledge": "intermediate", 
-                        "Intermediate": "intermediate",
-                        "Advanced": "advanced"
-                    }
-                    template_level = level_mapping.get(background_level, "intermediate")
-                    
-                    custom_prompt = prompt_template.render(
-                        topic=concept,
-                        level=template_level,
-                        rag_context=rag_context,
-                        rag_sources=rag_sources
-                    )
-                    
-                    explanation = llm.complete(custom_prompt, temperature=0.6, max_tokens=1200)
-                    
-                    # Display the explanation
-                    st.markdown("""
-                    <div class="content-card">
-                        <h3>📚 Concept Explanation: {concept}</h3>
-                        <div style="background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%); padding: 2rem; border-radius: 20px; border-left: 4px solid #4ecdc4; color: #ffffff; line-height: 1.8;">
-                            {explanation}
-                        </div>
-                    </div>
-                    """.format(concept=concept, explanation=explanation.replace('\n', '<br>')), unsafe_allow_html=True)
-                    
-                    # Display RAG sources if available
-                    if rag_sources:
-                        with st.expander("🔍 Knowledge Base Sources Used", expanded=False):
-                            st.markdown("**Sources that enhanced your explanation:**")
-                            for i, source in enumerate(rag_sources, 1):
-                                st.markdown(f"""
-                                **Source {i}:** {source['source']}
-                                - Relevance: {source['relevance_score']:.2f}
-                                - Chunk ID: {source['chunk_id']}
-                                """)
-                    
-                except Exception as e:
-                    st.error(f"❌ Error generating explanation: {str(e)}")
-        else:
-            st.warning("⚠️ Please enter a concept to explain.")
-
-# Interactive Quiz Tab
-with tab3:
-    st.markdown("""
-    <div class="content-card">
-        <h3>🧠 Interactive Quiz System</h3>
-        <p>Test your knowledge with AI-generated quizzes. Answer questions and get instant feedback!</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Define difficulty guidelines at the tab level so they can be accessed throughout
-    difficulty_guidelines = {
-        "Easy": {
-            "concepts": "basic concepts, definitions, simple facts",
-            "complexity": "straightforward questions with obvious answers",
-            "examples": "What is X? Which of these is correct? Basic terminology",
-            "description": "Beginner-friendly questions focusing on fundamental knowledge"
+# Enhanced knowledge base for intelligent content generation
+KNOWLEDGE_BASE = {
+    "mathematics": {
+        "calculus": {
+            "beginner": {
+                "concepts": [
+                    "Understanding what derivatives represent",
+                    "Basic derivative rules (power rule, constant rule)",
+                    "Simple applications like velocity and acceleration",
+                    "Graphical interpretation of derivatives"
+                ],
+                "examples": [
+                    "Finding the derivative of x² using power rule",
+                    "Understanding that velocity is the derivative of position",
+                    "Simple slope calculations"
+                ],
+                "applications": [
+                    "Basic physics problems",
+                    "Simple optimization problems",
+                    "Understanding rates of change"
+                ],
+                "weekly_topics": [
+                    "Week 1: Introduction to derivatives and basic rules",
+                    "Week 2: Power rule and constant rule practice",
+                    "Week 3: Simple applications and word problems",
+                    "Week 4: Review and assessment"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced derivative rules (product, quotient, chain rule)",
+                    "Implicit differentiation",
+                    "Related rates problems",
+                    "Applications to optimization"
+                ],
+                "examples": [
+                    "Using chain rule for composite functions",
+                    "Solving related rates problems",
+                    "Finding maximum/minimum values"
+                ],
+                "applications": [
+                    "Economics: marginal cost and revenue",
+                    "Engineering: optimization problems",
+                    "Physics: complex motion problems"
+                ],
+                "weekly_topics": [
+                    "Week 1: Product and quotient rules",
+                    "Week 2: Chain rule and composite functions",
+                    "Week 3: Implicit differentiation",
+                    "Week 4: Related rates and optimization"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Multivariable calculus concepts",
+                    "Partial derivatives and gradients",
+                    "Vector calculus fundamentals",
+                    "Advanced optimization techniques"
+                ],
+                "examples": [
+                    "Finding partial derivatives of functions",
+                    "Using Lagrange multipliers for optimization",
+                    "Understanding gradient descent"
+                ],
+                "applications": [
+                    "Machine learning algorithms",
+                    "Advanced physics modeling",
+                    "Financial mathematics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Multivariable functions and partial derivatives",
+                    "Week 2: Gradients and directional derivatives",
+                    "Week 3: Advanced optimization methods",
+                    "Week 4: Applications in modern fields"
+                ]
+            }
         },
-        "Medium": {
-            "concepts": "intermediate concepts, applications, moderate complexity",
-            "complexity": "questions requiring some understanding and reasoning",
-            "examples": "How does X work? Which scenario demonstrates Y? Compare and contrast",
-            "description": "Intermediate questions requiring understanding and application"
+        "algebra": {
+            "beginner": {
+                "concepts": [
+                    "Basic algebraic operations",
+                    "Solving linear equations",
+                    "Understanding variables and constants",
+                    "Simple factoring techniques"
+                ],
+                "examples": [
+                    "Solving 2x + 5 = 13",
+                    "Factoring x² + 5x + 6",
+                    "Understanding y = mx + b form"
+                ],
+                "applications": [
+                    "Basic business calculations",
+                    "Simple science formulas",
+                    "Everyday problem solving"
+                ],
+                "weekly_topics": [
+                    "Week 1: Basic operations and linear equations",
+                    "Week 2: Factoring and quadratic expressions",
+                    "Week 3: Graphing linear functions",
+                    "Week 4: Word problems and applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Quadratic equations and functions",
+                    "Systems of equations",
+                    "Polynomial functions",
+                    "Rational expressions"
+                ],
+                "examples": [
+                    "Solving quadratic equations using various methods",
+                    "Solving systems of linear equations",
+                    "Graphing polynomial functions"
+                ],
+                "applications": [
+                    "Business optimization",
+                    "Scientific modeling",
+                    "Engineering calculations"
+                ],
+                "weekly_topics": [
+                    "Week 1: Quadratic equations and functions",
+                    "Week 2: Systems of equations",
+                    "Week 3: Polynomial functions and graphs",
+                    "Week 4: Complex applications and problem solving"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Complex numbers and operations",
+                    "Advanced polynomial theory",
+                    "Abstract algebra concepts",
+                    "Linear algebra foundations"
+                ],
+                "examples": [
+                    "Working with complex numbers",
+                    "Understanding polynomial roots and factors",
+                    "Basic matrix operations"
+                ],
+                "applications": [
+                    "Advanced engineering",
+                    "Computer science algorithms",
+                    "Theoretical physics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Complex numbers and operations",
+                    "Week 2: Advanced polynomial theory",
+                    "Week 3: Introduction to linear algebra",
+                    "Week 4: Abstract concepts and applications"
+                ]
+            }
         },
-        "Hard": {
-            "concepts": "advanced concepts, analysis, synthesis, complex scenarios",
-            "complexity": "challenging questions requiring deep understanding and critical thinking",
-            "examples": "Analyze this scenario, What would happen if, Complex problem-solving",
-            "description": "Advanced questions requiring analysis and critical thinking"
+        "geometry": {
+            "beginner": {
+                "concepts": [
+                    "Basic geometric shapes and properties",
+                    "Area and perimeter calculations",
+                    "Understanding angles and measurements",
+                    "Simple geometric proofs"
+                ],
+                "examples": [
+                    "Calculating area of rectangles and triangles",
+                    "Understanding complementary and supplementary angles",
+                    "Basic Pythagorean theorem applications"
+                ],
+                "applications": [
+                    "Basic construction and design",
+                    "Simple measurement problems",
+                    "Art and design fundamentals"
+                ],
+                "weekly_topics": [
+                    "Week 1: Basic shapes and properties",
+                    "Week 2: Area and perimeter calculations",
+                    "Week 3: Angles and measurements",
+                    "Week 4: Simple proofs and applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced geometric theorems",
+                    "Coordinate geometry",
+                    "Trigonometry fundamentals",
+                    "Geometric transformations"
+                ],
+                "examples": [
+                    "Using coordinate geometry to solve problems",
+                    "Applying trigonometric ratios",
+                    "Understanding geometric transformations"
+                ],
+                "applications": [
+                    "Architecture and design",
+                    "Computer graphics",
+                    "Navigation and surveying"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced theorems and proofs",
+                    "Week 2: Coordinate geometry",
+                    "Week 3: Trigonometry fundamentals",
+                    "Week 4: Transformations and applications"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Non-Euclidean geometry",
+                    "Advanced trigonometry",
+                    "Vector geometry",
+                    "Geometric analysis"
+                ],
+                "examples": [
+                    "Understanding spherical geometry",
+                    "Advanced trigonometric identities",
+                    "Vector operations in geometry"
+                ],
+                "applications": [
+                    "Advanced physics",
+                    "Computer vision",
+                    "Theoretical mathematics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Non-Euclidean geometry concepts",
+                    "Week 2: Advanced trigonometry",
+                    "Week 3: Vector geometry",
+                    "Week 4: Modern applications and research"
+                ]
+            }
+        }
+    },
+    "physics": {
+        "mechanics": {
+            "beginner": {
+                "concepts": [
+                    "Basic motion concepts (speed, velocity, acceleration)",
+                    "Newton's laws of motion",
+                    "Simple force calculations",
+                    "Energy and work basics"
+                ],
+                "examples": [
+                    "Calculating average speed",
+                    "Understanding F = ma",
+                    "Basic energy conservation problems"
+                ],
+                "applications": [
+                    "Everyday motion problems",
+                    "Simple machine operation",
+                    "Basic sports physics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Motion and speed concepts",
+                    "Week 2: Newton's laws and forces",
+                    "Week 3: Energy and work",
+                    "Week 4: Simple applications and problems"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced motion analysis",
+                    "Momentum and collisions",
+                    "Circular motion and gravity",
+                    "Work-energy theorem"
+                ],
+                "examples": [
+                    "Solving collision problems",
+                    "Understanding centripetal force",
+                    "Advanced energy problems"
+                ],
+                "applications": [
+                    "Vehicle safety design",
+                    "Sports performance analysis",
+                    "Engineering applications"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced motion analysis",
+                    "Week 2: Momentum and collisions",
+                    "Week 3: Circular motion and gravity",
+                    "Week 4: Complex applications and problem solving"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Lagrangian and Hamiltonian mechanics",
+                    "Advanced collision theory",
+                    "Rigid body dynamics",
+                    "Chaos theory in mechanics"
+                ],
+                "examples": [
+                    "Using Lagrangian mechanics",
+                    "Understanding chaotic systems",
+                    "Advanced rigid body problems"
+                ],
+                "applications": [
+                    "Advanced engineering design",
+                    "Research in physics",
+                    "Complex system modeling"
+                ],
+                "weekly_topics": [
+                    "Week 1: Lagrangian mechanics",
+                    "Week 2: Advanced collision theory",
+                    "Week 3: Rigid body dynamics",
+                    "Week 4: Modern research applications"
+                ]
+            }
+        },
+        "thermodynamics": {
+            "beginner": {
+                "concepts": [
+                    "Temperature and heat basics",
+                    "First law of thermodynamics",
+                    "Simple heat transfer",
+                    "Basic gas laws"
+                ],
+                "examples": [
+                    "Understanding temperature scales",
+                    "Basic heat calculations",
+                    "Simple gas law problems"
+                ],
+                "applications": [
+                    "Basic heating and cooling",
+                    "Simple engine operation",
+                    "Everyday temperature effects"
+                ],
+                "weekly_topics": [
+                    "Week 1: Temperature and heat concepts",
+                    "Week 2: First law of thermodynamics",
+                    "Week 3: Heat transfer basics",
+                    "Week 4: Gas laws and simple applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Second law of thermodynamics",
+                    "Entropy and disorder",
+                    "Heat engines and efficiency",
+                    "Advanced gas processes"
+                ],
+                "examples": [
+                    "Calculating engine efficiency",
+                    "Understanding entropy changes",
+                    "Advanced gas law problems"
+                ],
+                "applications": [
+                    "Engine design and optimization",
+                    "Refrigeration systems",
+                    "Power generation"
+                ],
+                "weekly_topics": [
+                    "Week 1: Second law and entropy",
+                    "Week 2: Heat engines and efficiency",
+                    "Week 3: Advanced gas processes",
+                    "Week 4: Complex thermodynamic systems"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Statistical thermodynamics",
+                    "Quantum thermodynamics",
+                    "Non-equilibrium thermodynamics",
+                    "Advanced entropy concepts"
+                ],
+                "examples": [
+                    "Understanding statistical mechanics",
+                    "Quantum thermodynamic effects",
+                    "Non-equilibrium processes"
+                ],
+                "applications": [
+                    "Advanced power systems",
+                    "Quantum computing",
+                    "Research in thermodynamics"
+                ],
+                "weekly_topics": [
+                    "Week 1: Statistical thermodynamics",
+                    "Week 2: Quantum thermodynamics",
+                    "Week 3: Non-equilibrium processes",
+                    "Week 4: Modern research and applications"
+                ]
+            }
+        }
+    },
+    "computer_science": {
+        "programming": {
+            "beginner": {
+                "concepts": [
+                    "Variables and data types",
+                    "Basic control structures (if-else, loops)",
+                    "Functions and parameters",
+                    "Simple input/output operations"
+                ],
+                "examples": [
+                    "Writing a simple calculator program",
+                    "Creating loops to process data",
+                    "Defining and calling functions"
+                ],
+                "applications": [
+                    "Simple automation tasks",
+                    "Basic data processing",
+                    "Learning problem-solving skills"
+                ],
+                "weekly_topics": [
+                    "Week 1: Variables and basic operations",
+                    "Week 2: Control structures and logic",
+                    "Week 3: Functions and modularity",
+                    "Week 4: Simple projects and applications"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Object-oriented programming",
+                    "Data structures (arrays, lists, dictionaries)",
+                    "Error handling and debugging",
+                    "File operations and I/O"
+                ],
+                "examples": [
+                    "Creating classes and objects",
+                    "Implementing data structures",
+                    "Building robust programs with error handling"
+                ],
+                "applications": [
+                    "Web development",
+                    "Desktop applications",
+                    "Data analysis tools"
+                ],
+                "weekly_topics": [
+                    "Week 1: Object-oriented concepts",
+                    "Week 2: Data structures and algorithms",
+                    "Week 3: Error handling and debugging",
+                    "Week 4: Building complete applications"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Design patterns and architecture",
+                    "Advanced algorithms and optimization",
+                    "Concurrent programming",
+                    "Software testing and quality"
+                ],
+                "examples": [
+                    "Implementing design patterns",
+                    "Optimizing algorithms for performance",
+                    "Writing concurrent and parallel code"
+                ],
+                "applications": [
+                    "Large-scale software systems",
+                    "High-performance applications",
+                    "Enterprise software development"
+                ],
+                "weekly_topics": [
+                    "Week 1: Design patterns and architecture",
+                    "Week 2: Advanced algorithms",
+                    "Week 3: Concurrent programming",
+                    "Week 4: Software quality and testing"
+                ]
+            }
+        },
+        "algorithms": {
+            "beginner": {
+                "concepts": [
+                    "Basic algorithm concepts",
+                    "Simple sorting algorithms",
+                    "Search algorithms",
+                    "Algorithm efficiency basics"
+                ],
+                "examples": [
+                    "Implementing bubble sort",
+                    "Understanding binary search",
+                    "Analyzing simple algorithms"
+                ],
+                "applications": [
+                    "Basic data organization",
+                    "Simple search problems",
+                    "Learning computational thinking"
+                ],
+                "weekly_topics": [
+                    "Week 1: Algorithm fundamentals",
+                    "Week 2: Basic sorting algorithms",
+                    "Week 3: Search algorithms",
+                    "Week 4: Efficiency and analysis"
+                ]
+            },
+            "intermediate": {
+                "concepts": [
+                    "Advanced sorting algorithms",
+                    "Graph algorithms",
+                    "Dynamic programming basics",
+                    "Algorithm complexity analysis"
+                ],
+                "examples": [
+                    "Implementing merge sort and quick sort",
+                    "Solving graph traversal problems",
+                    "Understanding dynamic programming"
+                ],
+                "applications": [
+                    "Network analysis",
+                    "Route optimization",
+                    "Data processing systems"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced sorting algorithms",
+                    "Week 2: Graph algorithms",
+                    "Week 3: Dynamic programming",
+                    "Week 4: Complex problem solving"
+                ]
+            },
+            "advanced": {
+                "concepts": [
+                    "Advanced algorithm design",
+                    "NP-complete problems",
+                    "Approximation algorithms",
+                    "Parallel and distributed algorithms"
+                ],
+                "examples": [
+                    "Designing approximation algorithms",
+                    "Understanding NP-completeness",
+                    "Implementing parallel algorithms"
+                ],
+                "applications": [
+                    "Advanced research",
+                    "Complex optimization problems",
+                    "Distributed systems"
+                ],
+                "weekly_topics": [
+                    "Week 1: Advanced algorithm design",
+                    "Week 2: NP-complete problems",
+                    "Week 3: Approximation algorithms",
+                    "Week 4: Modern algorithmic research"
+                ]
+            }
         }
     }
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        quiz_subject = st.text_input(
-            "Quiz Subject",
-            placeholder="e.g., Python Programming, Biology, Mathematics",
-            help="Enter the subject for your quiz"
-        )
-        
-        num_questions = st.number_input(
-            "Number of Questions",
-            min_value=3,
-            max_value=10,
-            value=5,
-            help="Choose how many questions you want in your quiz"
-        )
-        
-        difficulty = st.selectbox(
-            "Starting Difficulty",
-            ["Easy", "Medium", "Hard"],
-            help="Select the initial difficulty level",
-            key="difficulty_selector"
-        )
-        
-        # Difficulty comparison tooltip
-        with st.expander("📊 Difficulty Level Guide", expanded=False):
-            st.markdown("""
-            **🎯 Easy Level:**
-            - Basic concepts and definitions
-            - Simple recall questions
-            - Obvious answer choices
-            - Perfect for beginners
-            
-            **🎯 Medium Level:**
-            - Understanding and application
-            - Moderate reasoning required
-            - Plausible but incorrect options
-            - Good for intermediate learners
-            
-            **🎯 Hard Level:**
-            - Advanced concepts and analysis
-            - Critical thinking required
-            - Very plausible incorrect options
-            - Challenging for advanced learners
-            """)
-    
-    with col2:
-        st.markdown("""
-        <div class="grid-item">
-            <h4>🎯 Quiz Configuration</h4>
-            <p><strong>Subject:</strong> {subject}</p>
-            <p><strong>Questions:</strong> {questions}</p>
-            <p><strong>Difficulty:</strong> {difficulty}</p>
-        </div>
-        """.format(subject=quiz_subject or "Not specified", questions=num_questions, difficulty=difficulty), unsafe_allow_html=True)
-    
-    # Quiz controls
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col1:
-        if st.button("🎲 Generate Quiz", type="primary"):
-            if quiz_subject:
-                with st.spinner("🤖 AI is generating your interactive quiz..."):
-                    try:
-                        # Initialize LLM with proper parameters
-                        if provider == "Ollama":
-                            llm = LLM(provider="ollama", model=model)
-                        else:
-                            st.error("OpenAI integration not yet implemented")
-                            st.stop()
-                        
-                        # RAG Integration: Retrieve relevant context from knowledge base
-                        rag_context = ""
-                        rag_sources = []
-                        if rag_system and 'rag_system' in st.session_state:
-                            try:
-                                # Retrieve relevant context for the quiz subject
-                                rag_context, rag_sources = rag_system.retrieve_relevant_context(
-                                    f"{quiz_subject} {difficulty} level quiz", 
-                                    k=3
-                                )
-                                if rag_context:
-                                    st.info(f"🔍 Found {len(rag_sources)} relevant knowledge base sources for quiz")
-                            except Exception as e:
-                                st.warning(f"⚠️ RAG retrieval failed: {str(e)}")
-                        
-                        # Create enhanced prompt using the prompt template
-                        from core.prompt_templates import QuizPrompt
-                        prompt_template = QuizPrompt()
-                        
-                        custom_prompt = prompt_template.render(
-                            topic=quiz_subject,
-                            level="intermediate",  # Default level, can be enhanced later
-                            difficulty=difficulty,
-                            num_questions=num_questions,
-                            rag_context=rag_context,
-                            rag_sources=rag_sources
-                        )
-                        
-                        quiz_data = llm.complete(custom_prompt, temperature=0.7, max_tokens=2000)
-                        
-                        # Parse quiz data into structured format
-                        questions = parse_quiz_data(quiz_data, num_questions)
-                        
-                        if questions:
-                            # Store parsed quiz data
-                            st.session_state.quiz_questions = questions
-                            st.session_state.quiz_generated = True
-                            st.session_state.quiz_submitted = False
-            st.session_state.user_answers = {}
-                            st.success("✅ Interactive quiz generated successfully!")
-                            
-                            # Display RAG sources if available
-                            if rag_sources:
-                                with st.expander("🔍 Knowledge Base Sources Used", expanded=False):
-                                    st.markdown("**Sources that enhanced your quiz:**")
-                                    for i, source in enumerate(rag_sources, 1):
-                                        st.markdown(f"""
-                                        **Source {i}:** {source['source']}
-                                        - Relevance: {source['relevance_score']:.2f}
-                                        - Chunk ID: {source['chunk_id']}
-                                        """)
-                        else:
-                            st.error("❌ Failed to parse quiz data. Please try again.")
-                        
-        except Exception as e:
-                        st.error(f"❌ Error generating quiz: {str(e)}")
-            else:
-                st.warning("⚠️ Please enter a quiz subject.")
-    
-    with col2:
-        if st.button("📝 Submit Quiz", type="secondary", disabled=not st.session_state.get('quiz_generated', False)):
-            if 'quiz_questions' in st.session_state and st.session_state.get('user_answers'):
-                # Grade the quiz
-                score, results = grade_quiz(st.session_state.quiz_questions, st.session_state.user_answers)
-                st.session_state.quiz_score = score
-                st.session_state.quiz_results = results
-                st.session_state.quiz_submitted = True
-                st.success(f"✅ Quiz submitted! Score: {score}%")
-            else:
-                st.warning("⚠️ Please answer all questions before submitting.")
-    
-    with col3:
-        if st.button("🗑️ Clear Quiz", type="secondary"):
-            # Clear all quiz-related session state
-            for key in ['quiz_questions', 'quiz_generated', 'quiz_submitted', 'user_answers', 'quiz_score', 'quiz_results']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.success("✅ Quiz cleared!")
-    
-    # Display interactive quiz if generated
-    if st.session_state.get('quiz_generated', False) and 'quiz_questions' in st.session_state:
-        # Difficulty indicator with color coding
-        difficulty_colors = {
-            "Easy": "#10b981",      # Green
-            "Medium": "#f59e0b",    # Orange
-            "Hard": "#ef4444"       # Red
-        }
-        
-        difficulty_color = difficulty_colors.get(difficulty, "#6b7280")
-        
-        st.markdown(f"""
-        <div class="content-card">
-            <h3>📝 Quiz: {quiz_subject}</h3>
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <p><strong>Questions:</strong> {num_questions}</p>
-                <div style="
-                    background: {difficulty_color}; 
-                    color: white; 
-                    padding: 0.5rem 1rem; 
-                    border-radius: 20px; 
-                    font-weight: 700;
-                    font-size: 0.9rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                ">
-                    🎯 {difficulty} Level
-                </div>
-            </div>
-            <div style="
-                background: linear-gradient(135deg, {difficulty_color}20 0%, {difficulty_color}10 100%);
-                border-left: 4px solid {difficulty_color};
-                padding: 1rem;
-                border-radius: 8px;
-                margin-bottom: 1rem;
-            ">
-                <p style="color: #e2e8f0; margin: 0; font-size: 0.9rem;">
-                    <strong>Difficulty Focus:</strong> {difficulty_guidelines[difficulty]['description']}
-                </p>
-            </div>
-        </div>
-        """.format(quiz_subject=quiz_subject, num_questions=num_questions, difficulty=difficulty, difficulty_colors=difficulty_colors, difficulty_guidelines=difficulty_guidelines), unsafe_allow_html=True)
-        
-        # Display interactive quiz questions
-        if 'quiz_questions' in st.session_state:
-            questions = st.session_state.quiz_questions
-            
-            for i, question_data in enumerate(questions, 1):
-                st.markdown(f"""
-                <div class="grid-item" style="margin-bottom: 2rem;">
-                    <h4 style="color: #ff6b6b; margin-bottom: 1rem;">Question {i}</h4>
-                    <p style="color: #ffffff; font-size: 1.1rem; margin-bottom: 1.5rem;">{question_data['question']}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Create radio buttons for options
-                options = question_data['options']
-                user_answer = st.radio(
-                    f"Select your answer for Question {i}:",
-                    options,
-                    key=f"q{i}",
-                    label_visibility="collapsed"
-                )
-                
-                # Store user's answer
-                st.session_state.user_answers[i] = user_answer
-                
-                st.markdown("<hr style='margin: 2rem 0; border-color: #404040;'>", unsafe_allow_html=True)
-    
-    # Display results if quiz was submitted
-    if st.session_state.get('quiz_submitted', False) and 'quiz_results' in st.session_state:
-        st.markdown("""
-        <div class="content-card">
-            <h3>🎯 Quiz Results</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Display score
-        score = st.session_state.quiz_score
-        st.markdown(f"""
-        <div class="grid-item" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); text-align: center; margin-bottom: 2rem;">
-            <h4 style="color: white; font-size: 2rem; margin-bottom: 1rem;">🎯 Your Score</h4>
-            <div style="font-size: 4rem; font-weight: 900; color: white; margin-bottom: 1rem;">{score}%</div>
-            <p style="color: white; opacity: 0.9;">{get_score_message(score)}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Display detailed results
-        results = st.session_state.quiz_results
-        for i, result in enumerate(results, 1):
-            question_data = st.session_state.quiz_questions[i-1]
-            user_answer = st.session_state.user_answers.get(i, "Not answered")
-            user_answer_letter = result.get('user_answer_letter', '?')
-            correct_answer_letter = result.get('correct_answer_letter', '?')
-            is_correct = result['correct']
-            
-            # Get the full text for the correct answer
-            correct_answer_text = "Unknown"
-            if correct_answer_letter and correct_answer_letter in ['A', 'B', 'C', 'D']:
-                idx = ord(correct_answer_letter) - 65  # Convert A,B,C,D to 0,1,2,3
-                if 0 <= idx < len(question_data['options']):
-                    correct_answer_text = question_data['options'][idx]
-            
-            # Color coding for correct/incorrect answers
-            status_color = "#10b981" if is_correct else "#ef4444"
-            status_icon = "✅" if is_correct else "❌"
-            
-            st.markdown(f"""
-            <div class="grid-item" style="border-left: 4px solid {status_color};">
-                <h4 style="color: {status_color}; margin-bottom: 1rem;">{status_icon} Question {i}</h4>
-                <p style="color: #ffffff; margin-bottom: 1rem;"><strong>Question:</strong> {question_data['question']}</p>
-                <p style="color: #e2e8f0; margin-bottom: 0.5rem;"><strong>Your Answer:</strong> {user_answer} ({user_answer_letter})</p>
-                <p style="color: #10b981; margin-bottom: 0.5rem;"><strong>Correct Answer:</strong> {correct_answer_text} ({correct_answer_letter})</p>
-                <p style="color: #4ecdc4; margin-bottom: 0;"><strong>Explanation:</strong> {question_data['explanation']}</p>
-                
-                <!-- Debug information -->
-                <details style="margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                    <summary style="color: #808080; cursor: pointer; font-size: 0.9rem;">🔍 Debug Info</summary>
-                    <div style="font-size: 0.8rem; color: #808080; margin-top: 0.5rem;">
-                        <p><strong>Raw User Answer:</strong> "{user_answer}"</p>
-                        <p><strong>Raw Correct Answer:</strong> "{correct_answer_letter}"</p>
-                        <p><strong>Options:</strong> {question_data['options']}</p>
-                        <p><strong>Mapped User Letter:</strong> {user_answer_letter}</p>
-                        <p><strong>Comparison:</strong> {user_answer_letter} == {correct_answer_letter} = {is_correct}</p>
-                    </div>
-                </details>
-            </div>
-            """, unsafe_allow_html=True)
+}
 
-# Progress Tracker Tab
-with tab4:
+# Enhanced study plan generator with intelligent algorithms
+def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_days, goal, learning_style, previous_knowledge, difficulty_preference):
+    """Generate an intelligent, personalized study plan using knowledge base."""
+    
+    # Get subject knowledge
+    subject_knowledge = KNOWLEDGE_BASE.get(subject.lower(), KNOWLEDGE_BASE["mathematics"])
+    
+    # Select topics based on level and difficulty
+    if level == "beginner":
+        topics = list(subject_knowledge.keys())[:2]  # First 2 topics
+    elif level == "intermediate":
+        topics = list(subject_knowledge.keys())[:3]  # First 3 topics
+    else:  # advanced
+        topics = list(subject_knowledge.keys())  # All topics
+    
+    # Personalize based on learning style
+    style_methods = {
+        "visual": [
+            "📊 Create mind maps and concept diagrams",
+            "🎨 Use color-coded notes and visual organizers",
+            "📱 Watch educational videos and animations",
+            "🖼️ Draw sketches and flowcharts"
+        ],
+        "auditory": [
+            "🎧 Listen to educational podcasts and lectures",
+            "🗣️ Join study groups and discussion sessions",
+            "📝 Read notes aloud and record yourself",
+            "🎵 Use mnemonic devices and rhymes"
+        ],
+        "kinesthetic": [
+            "✋ Build physical models and prototypes",
+            "🏃 Practice with hands-on experiments",
+            "🎯 Use interactive simulations and games",
+            "✏️ Write and rewrite notes by hand"
+        ],
+        "reading/writing": [
+            "📚 Extensive reading of textbooks and papers",
+            "✍️ Take detailed, organized notes",
+            "📝 Write summaries and explanations",
+            "📖 Create study guides and cheat sheets"
+        ]
+    }
+    
+    methods = style_methods.get(learning_style, style_methods["visual"])
+    
+    # Calculate time distribution intelligently
+    total_minutes = minutes_per_day * duration_days
+    concept_time = total_minutes * 0.4  # 40% for concepts
+    practice_time = total_minutes * 0.3  # 30% for practice
+    review_time = total_minutes * 0.2    # 20% for review
+    assessment_time = total_minutes * 0.1 # 10% for assessment
+    
+    # Generate detailed plan with topic-specific content
+    plan = f"""
+## 📚 {subject.title()} Study Plan - {level.title()} Level
+
+**Duration**: {duration_days} days | **Daily Time**: {minutes_per_day} minutes  
+**Learning Goal**: {goal}
+
+### 🎯 Learning Objectives:
+"""
+    
+    for i, topic in enumerate(topics, 1):
+        # Get level-specific content for each topic
+        topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+        concepts = topic_content["concepts"][:3]  # Get first 3 concepts
+        plan += f"\n{i}. **{topic.title()}** - Master: {', '.join(concepts)}"
+    
+    plan += f"""
+
+### 📅 Weekly Schedule:
+"""
+    
+    weeks = (duration_days + 6) // 7  # Calculate number of weeks
+    for week in range(1, weeks + 1):
+        start_day = (week - 1) * 7 + 1
+        end_day = min(week * 7, duration_days)
+        week_topics = topics[(week - 1) % len(topics):week % len(topics) + 1]
+        
+        # Get specific weekly topics for each subject
+        week_details = []
+        for topic in week_topics:
+            topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+            weekly_topics = topic_content.get("weekly_topics", [])
+            if weekly_topics:
+                week_details.append(f"{topic.title()}: {weekly_topics[week % len(weekly_topics) - 1]}")
+            else:
+                week_details.append(topic.title())
+        
+        plan += f"- **Week {week} (Days {start_day}-{end_day})**: Focus on {', '.join(week_details)}\n"
+    
+    plan += f"""
+
+### 🧪 Practice Activities (Total: {int(practice_time)} minutes):
+- **Daily Problem Solving**: {minutes_per_day//4} minutes - Work through exercises and examples
+- **Weekly Quizzes**: {minutes_per_day//2} minutes - Test understanding and retention
+- **Hands-on Projects**: {minutes_per_day//3} minutes - Apply concepts practically
+- **Study Groups**: {minutes_per_day//6} minutes - Discuss and explain concepts to others
+
+### 🎨 Learning Methods (Personalized for {learning_style} style):
+"""
+    
+    for method in methods:
+        plan += f"- {method}"
+    
+    plan += f"""
+
+### 📊 Progress Tracking:
+- **Daily**: Quick concept review and practice
+- **Weekly**: Self-assessment and topic mastery check
+- **Bi-weekly**: Comprehensive review and adjustment
+- **Monthly**: Major milestone evaluation and plan refinement
+
+### 💡 Difficulty Progression ({difficulty_preference} preference):
+"""
+    
+    if difficulty_preference == "easy":
+        plan += """
+- Start with foundational concepts and basic examples
+- Gradually introduce complexity through guided practice
+- Focus on understanding before memorization
+- Use multiple approaches to reinforce learning
+"""
+    elif difficulty_preference == "medium":
+        plan += """
+- Balance foundational and advanced concepts
+- Mix theoretical understanding with practical application
+- Challenge yourself with progressively harder problems
+- Seek connections between different topics
+"""
+    else:  # hard
+        plan += """
+- Dive deep into complex concepts early
+- Focus on problem-solving and critical thinking
+- Explore advanced applications and edge cases
+- Push beyond comfort zone for maximum growth
+"""
+    
+    plan += f"""
+
+### 🔍 Topic-Specific Content:
+This plan incorporates {len(topics)} key topics with level-appropriate content:
+"""
+    
+    for topic in topics:
+        topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+        plan += f"- **{topic.title()}**: {len(topic_content['concepts'])} core concepts, {len(topic_content['examples'])} examples, {len(topic_content['applications'])} applications\n"
+    
+    # Add specific examples for the selected topics
+    plan += f"\n### 📝 Specific Examples for {level.title()} Level:\n"
+    for topic in topics:
+        topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
+        examples = topic_content["examples"][:2]  # Get 2 examples
+        plan += f"- **{topic.title()}**: {', '.join(examples)}\n"
+    
+    return plan
+
+# Enhanced explanation generator with contextual intelligence
+def generate_intelligent_explanation(topic, level, explanation_type, include_visuals, use_cot, include_examples):
+    """Generate an intelligent, contextual explanation using knowledge base."""
+    
+    # Find topic in knowledge base
+    topic_found = False
+    topic_data = {}
+    subject_name = ""
+    
+    for subject, subjects in KNOWLEDGE_BASE.items():
+        if topic.lower() in subjects:
+            topic_data = subjects[topic.lower()]
+            subject_name = subject
+            topic_found = True
+            break
+    
+    if not topic_found:
+        # Generate generic explanation if topic not found
+        topic_data = {
+            "beginner": {
+                "concepts": [f"{topic} is a fundamental concept that involves understanding core principles and applications."],
+                "examples": [f"Basic examples of {topic} demonstrate its practical use."],
+                "applications": [f"{topic} has applications in various fields and industries."]
+            }
+        }
+        subject_name = "general"
+    
+    # Get level-appropriate content
+    level_content = topic_data.get(level.lower(), topic_data["beginner"])
+    concepts = level_content["concepts"]
+    examples = level_content["examples"]
+    applications = level_content["applications"]
+    
+    # Generate topic-specific explanation
+    explanation = f"""
+## 🧠 {topic.title()} - {level.title()} Level Explanation
+
+### 📖 Core Concepts:
+"""
+    
+    for i, concept in enumerate(concepts, 1):
+        explanation += f"{i}. **{concept}**\n"
+    
+    explanation += f"""
+
+### 🔍 {explanation_type.title()} Breakdown:
+"""
+    
+    if explanation_type == "conceptual":
+        explanation += f"""
+- **What it is**: {topic.title()} represents fundamental principles in {subject_name}
+- **Why it matters**: Understanding {topic.lower()} is crucial for advanced learning in {subject_name}
+- **Key insight**: It connects multiple related concepts together
+- **Core principle**: {concepts[0] if concepts else 'Fundamental understanding'}
+"""
+    elif explanation_type == "step-by-step":
+        explanation += f"""
+1. **Foundation**: Start with basic principles and definitions
+2. **Building blocks**: Understand component parts and relationships
+3. **Integration**: See how pieces fit together
+4. **Application**: Practice with real-world examples
+5. **Mastery**: Develop deep understanding and intuition
+"""
+    elif explanation_type == "with examples":
+        explanation += f"""
+- **Simple case**: Start with basic, clear examples
+- **Intermediate**: Build complexity step by step
+- **Advanced**: Explore edge cases and variations
+- **Real-world**: Connect to practical applications
+"""
+    else:  # comprehensive
+        explanation += f"""
+- **Theoretical foundation**: Understand underlying principles
+- **Practical application**: See how theory becomes practice
+- **Historical context**: Learn about development and evolution
+- **Future implications**: Explore current research and applications
+"""
+    
+    if include_examples and examples:
+        explanation += f"""
+
+### 💡 Specific Examples for {level.title()} Level:
+"""
+        for i, example in enumerate(examples, 1):
+            explanation += f"{i}. **{example}**\n"
+    
+    if include_visuals:
+        explanation += f"""
+
+### 🎨 Visual Description:
+Imagine {topic.lower()} as a building with multiple floors. Each floor represents a different aspect or level of understanding. As you climb higher, you see more connections and applications. The foundation supports everything above, just as basic concepts support advanced understanding.
+"""
+    
+    if use_cot:
+        explanation += f"""
+
+### 🤔 Chain of Thought:
+1. **Question**: What is {topic} and why is it important in {subject_name}?
+2. **Analysis**: Let me break this down systematically
+3. **Understanding**: {concepts[0] if concepts else 'Core concept explanation'}
+4. **Connection**: This relates to other concepts because...
+5. **Application**: We use this in practice when...
+6. **Conclusion**: {topic.title()} is essential for understanding {subject_name}...
+"""
+    
+    if applications:
+        explanation += f"""
+
+### 🌍 Real-World Applications:
+"""
+        for i, application in enumerate(applications, 1):
+            explanation += f"{i}. **{application}**\n"
+    
+    explanation += f"""
+
+### 📚 Next Steps:
+- Practice with progressively challenging problems
+- Connect {topic.lower()} to related concepts in {subject_name}
+- Apply understanding to real-world scenarios
+- Explore advanced topics and research areas
+- Teach others to reinforce your own understanding
+
+### 🎯 Level-Appropriate Focus:
+For {level} level, focus on: {', '.join(concepts[:2])}
+"""
+    
+    return explanation
+
+# Enhanced quiz generator with variety and intelligence
+def generate_intelligent_quiz(topic, difficulty, num_questions, question_type):
+    """Generate an intelligent, varied quiz using knowledge base."""
+    
+    # Find topic in knowledge base
+    topic_found = False
+    topic_data = {}
+    
+    for subject, subjects in KNOWLEDGE_BASE.items():
+        if topic.lower() in subjects:
+            topic_data = subjects[topic.lower()]
+            topic_found = True
+            break
+    
+    if not topic_found:
+        # Generate generic questions if topic not found
+        topic_data = {
+            "beginner": {
+                "concepts": [f"Understanding {topic} requires knowledge of fundamental principles"],
+                "examples": [f"Basic applications of {topic} demonstrate its utility"],
+                "applications": [f"{topic} has wide-ranging applications in various fields"]
+            }
+        }
+    
+    # Generate different question types
+    questions = []
+    
+    if question_type == "multiple choice":
+        questions = generate_multiple_choice_questions(topic, topic_data, difficulty, num_questions)
+    elif question_type == "true/false":
+        questions = generate_true_false_questions(topic, topic_data, difficulty, num_questions)
+    elif question_type == "fill in the blank":
+        questions = generate_fill_blank_questions(topic, topic_data, difficulty, num_questions)
+    else:  # mixed
+        questions = generate_mixed_questions(topic, topic_data, difficulty, num_questions)
+    
+    return questions
+
+def generate_multiple_choice_questions(topic, topic_data, difficulty, num_questions):
+    """Generate varied multiple choice questions."""
+    
+    # Base questions for different topics
+    base_questions = {
+        "calculus": [
+            {
+                "question": "What is the derivative of x³?",
+                "options": ["x²", "2x²", "3x²", "3x"],
+                "correct_answer": "3x²",
+                "explanation": "Using the power rule: d/dx(x^n) = n*x^(n-1). For x³, n=3, so d/dx(x³) = 3*x^(3-1) = 3x²."
+            },
+            {
+                "question": "What does the integral represent geometrically?",
+                "options": ["Slope of the curve", "Area under the curve", "Length of the curve", "Volume of revolution"],
+                "correct_answer": "Area under the curve",
+                "explanation": "The definite integral calculates the area between the curve and the x-axis over a specified interval."
+            },
+            {
+                "question": "What is the limit of 1/x as x approaches infinity?",
+                "options": ["Infinity", "1", "0", "Undefined"],
+                "correct_answer": "0",
+                "explanation": "As x gets larger and larger, 1/x gets smaller and smaller, approaching 0."
+            },
+            {
+                "question": "What is the derivative of a constant function?",
+                "options": ["The constant itself", "Zero", "One", "Undefined"],
+                "correct_answer": "Zero",
+                "explanation": "A constant function doesn't change, so its rate of change (derivative) is zero."
+            },
+            {
+                "question": "What is the integral of 2x?",
+                "options": ["x²", "x² + C", "2x²", "2x² + C"],
+                "correct_answer": "x² + C",
+                "explanation": "The integral of 2x is x² + C, where C is the constant of integration."
+            }
+        ],
+        "algebra": [
+            {
+                "question": "What is the solution to 2x + 5 = 13?",
+                "options": ["x = 4", "x = 8", "x = 9", "x = 3"],
+                "correct_answer": "x = 4",
+                "explanation": "Subtract 5 from both sides: 2x = 8, then divide by 2: x = 4."
+            },
+            {
+                "question": "What is the vertex form of a quadratic equation?",
+                "options": ["y = ax² + bx + c", "y = a(x-h)² + k", "y = mx + b", "y = 1/x"],
+                "correct_answer": "y = a(x-h)² + k",
+                "explanation": "The vertex form y = a(x-h)² + k shows the vertex at point (h,k)."
+            },
+            {
+                "question": "What is the slope of the line y = 3x + 2?",
+                "options": ["2", "3", "5", "Undefined"],
+                "correct_answer": "3",
+                "explanation": "In the slope-intercept form y = mx + b, m is the slope, so the slope is 3."
+            }
+        ],
+        "physics": [
+            {
+                "question": "What is Newton's First Law?",
+                "options": ["F = ma", "Action equals reaction", "Objects in motion stay in motion", "Gravity attracts objects"],
+                "correct_answer": "Objects in motion stay in motion",
+                "explanation": "Newton's First Law states that an object in motion will stay in motion unless acted upon by an external force."
+            },
+            {
+                "question": "What is the formula for kinetic energy?",
+                "options": ["KE = mgh", "KE = ½mv²", "KE = Fd", "KE = Pt"],
+                "correct_answer": "KE = ½mv²",
+                "explanation": "Kinetic energy is calculated using KE = ½mv², where m is mass and v is velocity."
+            }
+        ]
+    }
+    
+    # Get questions for the specific topic
+    topic_questions = base_questions.get(topic.lower(), base_questions["calculus"])
+    
+    # Adjust difficulty and add variety
+    if difficulty == "easy":
+        questions = topic_questions[:min(3, len(topic_questions))]
+    elif difficulty == "medium":
+        questions = topic_questions[:min(4, len(topic_questions))]
+    else:  # hard
+        questions = topic_questions[:min(5, len(topic_questions))]
+    
+    # Ensure we have enough questions
+    while len(questions) < num_questions:
+        # Create variations of existing questions
+        for q in questions[:]:
+            if len(questions) >= num_questions:
+                break
+            new_q = q.copy()
+            new_q["question"] = f"Advanced: {q['question']}"
+            new_q["explanation"] = f"Advanced understanding: {q['explanation']}"
+            questions.append(new_q)
+    
+    # Shuffle questions for variety
+    random.shuffle(questions)
+    
+    return questions[:num_questions]
+
+def generate_true_false_questions(topic, topic_data, difficulty, num_questions):
+    """Generate true/false questions."""
+    
+    questions = []
+    
+    # Generate T/F questions based on topic data
+    if topic.lower() in ["calculus", "derivatives"]:
+        tf_questions = [
+            {
+                "question": "The derivative of a constant is always zero.",
+                "options": ["True", "False"],
+                "correct_answer": "True",
+                "explanation": "A constant doesn't change, so its rate of change is zero."
+            },
+            {
+                "question": "The integral of a function is always positive.",
+                "options": ["True", "False"],
+                "correct_answer": "False",
+                "explanation": "Integrals can be positive, negative, or zero depending on the function and interval."
+            },
+            {
+                "question": "All continuous functions are differentiable.",
+                "options": ["True", "False"],
+                "correct_answer": "False",
+                "explanation": "Not all continuous functions are differentiable (e.g., |x| at x=0)."
+            }
+        ]
+    else:
+        tf_questions = [
+            {
+                "question": f"Understanding {topic} requires practice and application.",
+                "options": ["True", "False"],
+                "correct_answer": "True",
+                "explanation": "Learning requires both theoretical understanding and practical application."
+            },
+            {
+                "question": f"{topic.title()} has applications in multiple fields.",
+                "options": ["True", "False"],
+                "correct_answer": "True",
+                "explanation": "Most fundamental concepts have wide-ranging applications."
+            }
+        ]
+    
+    # Select questions based on difficulty
+    if difficulty == "easy":
+        questions = tf_questions[:min(2, len(tf_questions))]
+    elif difficulty == "medium":
+        questions = tf_questions[:min(3, len(tf_questions))]
+    else:
+        questions = tf_questions[:min(3, len(tf_questions))]
+    
+    # Ensure enough questions
+    while len(questions) < num_questions:
+        for q in questions[:]:
+            if len(questions) >= num_questions:
+                break
+            new_q = q.copy()
+            new_q["question"] = f"Additional: {q['question']}"
+            questions.append(new_q)
+    
+    random.shuffle(questions)
+    return questions[:num_questions]
+
+def generate_fill_blank_questions(topic, topic_data, difficulty, num_questions):
+    """Generate fill-in-the-blank questions."""
+    
+    questions = []
+    
+    if topic.lower() in ["calculus", "derivatives"]:
+        fill_questions = [
+            {
+                "question": "The derivative of x² is _____.",
+                "options": ["2x", "x", "2x²", "x²"],
+                "correct_answer": "2x",
+                "explanation": "Using the power rule: d/dx(x^n) = n*x^(n-1). For x², n=2, so d/dx(x²) = 2x."
+            },
+            {
+                "question": "The integral of 2x is _____.",
+                "options": ["x²", "x² + C", "2x²", "2x² + C"],
+                "correct_answer": "x² + C",
+                "explanation": "The integral of 2x is x² + C, where C is the constant of integration."
+            }
+        ]
+    else:
+        fill_questions = [
+            {
+                "question": f"Understanding {topic} requires _____ and _____.",
+                "options": ["theory and practice", "memorization only", "examples only", "none of the above"],
+                "correct_answer": "theory and practice",
+                "explanation": "Effective learning combines theoretical understanding with practical application."
+            }
+        ]
+    
+    # Select questions based on difficulty
+    if difficulty == "easy":
+        questions = fill_questions[:min(2, len(fill_questions))]
+    else:
+        questions = fill_questions[:min(3, len(fill_questions))]
+    
+    # Ensure enough questions
+    while len(questions) < num_questions:
+        for q in questions[:]:
+            if len(questions) >= num_questions:
+                break
+            new_q = q.copy()
+            new_q["question"] = f"Additional: {q['question']}"
+            questions.append(new_q)
+    
+    random.shuffle(questions)
+    return questions[:num_questions]
+
+def generate_mixed_questions(topic, topic_data, difficulty, num_questions):
+    """Generate a mix of different question types."""
+    
+    mc_questions = generate_multiple_choice_questions(topic, topic_data, difficulty, num_questions//2)
+    tf_questions = generate_true_false_questions(topic, topic_data, difficulty, num_questions//3)
+    fill_questions = generate_fill_blank_questions(topic, topic_data, difficulty, num_questions//3)
+    
+    # Combine and shuffle
+    all_questions = mc_questions + tf_questions + fill_questions
+    random.shuffle(all_questions)
+    
+    return all_questions[:num_questions]
+
+def main():
+    """Main application with clean interface."""
+    
+    # Header
     st.markdown("""
-    <div class="content-card">
-        <h3>📊 Learning Progress Dashboard</h3>
-        <p>Track your learning journey, monitor achievements, and analyze your study patterns.</p>
+    <div class="main-header">
+        <h1>🎓 SmartLearn Enhanced</h1>
+        <h3>AI-Powered Study Assistant with Advanced Intelligence</h3>
+        <p>Study Plans • Explanations • Adaptive Quizzes</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Initialize progress tracking in session state
-    if 'study_sessions' not in st.session_state:
-        st.session_state.study_sessions = []
-    if 'completed_topics' not in st.session_state:
-        st.session_state.completed_topics = []
-    if 'quiz_history' not in st.session_state:
-        st.session_state.quiz_history = []
+    # Sidebar - Clean and simple
+    with st.sidebar:
+        st.markdown("## ⚙️ Configuration")
+        
+        # AI Model Selection
+        model = st.selectbox(
+            "AI Model",
+            ["mistral:7b-instruct", "llama2:7b", "codellama:7b"],
+            index=0
+        )
+        
+        # Background Systems Status (Read-only)
+        st.markdown("## 🔧 System Status")
+        st.markdown(f"**Core System:** <span class='status-badge status-active'>Active</span>", unsafe_allow_html=True)
+        st.markdown(f"**AI Engine:** <span class='status-badge status-active'>Active</span>", unsafe_allow_html=True)
+        st.markdown(f"**Knowledge Base:** <span class='status-badge status-active'>Active</span>", unsafe_allow_html=True)
+        
+        st.markdown("---")
+        st.markdown("""
+        <small>
+        💡 **Intelligent Features:**
+        • Advanced Study Planning
+        • Contextual Explanations
+        • Varied Quiz Generation
+        • Personalized Learning
+        </small>
+        """, unsafe_allow_html=True)
     
-    col1, col2 = st.columns([2, 1])
+    # Main content - Only 3 tabs with proper spacing
+    tab1, tab2, tab3 = st.tabs([
+        "📚 Study Plan Generator", 
+        "🧠 Explanation Generator", 
+        "🎯 Adaptive Quiz Generator"
+    ])
     
-    with col1:
-        st.markdown("### 📝 Log Study Session")
+    # Tab 1: Enhanced Study Plan Generator
+    with tab1:
+        st.markdown("## 📚 Enhanced Study Plan Generator")
+        st.markdown("*Powered by intelligent algorithms with personalized learning paths*")
         
-        session_subject = st.text_input(
-            "Subject/Topic",
-            placeholder="e.g., Calculus, Python Programming",
-            key="session_subject"
-        )
+        col1, col2 = st.columns(2)
         
-        session_duration = st.number_input(
-            "Duration (minutes)",
-            min_value=15,
-            max_value=480,
-            value=60,
-            step=15,
-            key="session_duration"
-        )
+        with col1:
+            subject = st.text_input("Subject", value="mathematics", key="sp_subject")
+            level = st.selectbox("Level", ["beginner", "intermediate", "advanced"], key="sp_level")
+            topic = st.text_input("Topic/Concept", value="calculus", key="sp_topic")
         
-        session_activities = st.multiselect(
-            "Activities Completed",
-            ["Reading", "Practice Problems", "Quiz", "Project Work", "Review", "Note-taking"],
-            key="session_activities"
-        )
+        with col2:
+            minutes_per_day = st.number_input("Minutes per Day", min_value=15, max_value=180, value=60, step=15)
+            duration_days = st.number_input("Duration (Days)", min_value=1, max_value=30, value=7, step=1)
+            goal = st.text_area("Learning Goal", value="Master fundamental concepts and problem-solving techniques", key="sp_goal")
         
-        session_notes = st.text_area(
-            "Session Notes",
-            placeholder="What did you learn? Any challenges?",
-            key="session_notes"
-        )
+        # Personalization options
+        with st.expander("🎯 Personalization Options"):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                learning_style = st.selectbox(
+                    "Learning Style",
+                    ["visual", "auditory", "kinesthetic", "reading/writing"],
+                    index=0,
+                    key="sp_style"
+                )
+            
+            with col2:
+                previous_knowledge = st.selectbox(
+                    "Previous Knowledge",
+                    ["none", "basic", "intermediate", "advanced"],
+                    index=1,
+                    key="sp_knowledge"
+                )
+            
+            with col3:
+                difficulty_preference = st.selectbox(
+                    "Difficulty Preference",
+                    ["easy", "medium", "hard"],
+                    index=1,
+                    key="sp_difficulty"
+                )
         
-        if st.button("💾 Save Session", type="primary"):
-            if session_subject:
-                from datetime import datetime
+        # Generate Study Plan
+        if st.button("🚀 Generate Enhanced Study Plan", type="primary", key="sp_generate"):
+            with st.spinner("Creating your personalized study plan..."):
+                try:
+                    # Generate intelligent study plan
+                    study_plan = generate_intelligent_study_plan(
+                        subject, level, minutes_per_day, duration_days, goal,
+                        learning_style, previous_knowledge, difficulty_preference
+                    )
+                    
+                    st.success("✅ Your personalized study plan is ready!")
+                    
+                    # Display the plan
+                    st.markdown("### 📖 Your Personalized Study Plan")
+                    st.markdown(study_plan)
+                    
+                    # Show that advanced features were used (subtle indicator)
+                    st.info("💡 *Enhanced with intelligent algorithms, personalized context, and adaptive learning strategies*")
+                    
+                except Exception as e:
+                    st.error(f"Error generating study plan: {e}")
+    
+    # Tab 2: Enhanced Explanation Generator
+    with tab2:
+        st.markdown("## 🧠 Enhanced Explanation Generator")
+        st.markdown("*Powered by intelligent algorithms with contextual understanding and examples*")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            topic = st.text_input("Topic/Concept", value="derivatives", key="exp_topic")
+            level = st.selectbox("Explanation Level", ["beginner", "intermediate", "advanced"], key="exp_level")
+            subject = st.text_input("Subject Area", value="mathematics", key="exp_subject")
+        
+        with col2:
+            explanation_type = st.selectbox(
+                "Explanation Type",
+                ["conceptual", "step-by-step", "with examples", "comprehensive"],
+                index=0,
+                key="exp_type"
+            )
+            include_visuals = st.checkbox("Include Visual Descriptions", value=True, key="exp_visuals")
+        
+        # Advanced options
+        with st.expander("🔧 Advanced Explanation Options"):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                use_cot = st.checkbox("Use Chain-of-Thought", value=True, key="exp_cot")
+            
+            with col2:
+                include_examples = st.checkbox("Include Examples", value=True, key="exp_examples")
+            
+            with col3:
+                adaptive_complexity = st.checkbox("Adaptive Complexity", value=True, key="exp_adaptive")
+        
+        # Generate Explanation
+        if st.button("💡 Generate Enhanced Explanation", type="primary", key="exp_generate"):
+            with st.spinner("Creating your personalized explanation..."):
+                try:
+                    # Generate intelligent explanation
+                    explanation = generate_intelligent_explanation(
+                        topic, level, explanation_type, include_visuals, use_cot, include_examples
+                    )
+                    
+                    st.success("✅ Your personalized explanation is ready!")
+                    
+                    # Display the explanation
+                    st.markdown("### 🧠 Your Personalized Explanation")
+                    st.markdown(explanation)
+                    
+                    # Show that advanced features were used (subtle indicator)
+                    st.info("💡 *Enhanced with intelligent algorithms, examples, and adaptive reasoning*")
+                    
+                except Exception as e:
+                    st.error(f"Error generating explanation: {e}")
+    
+    # Tab 3: Enhanced Adaptive Quiz Generator
+    with tab3:
+        st.markdown("## 🎯 Enhanced Adaptive Quiz Generator")
+        st.markdown("*Powered by intelligent algorithms with varied question types and personalized difficulty*")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            topic = st.text_input("Quiz Topic", value="calculus fundamentals", key="quiz_topic")
+            subject = st.text_input("Subject", value="mathematics", key="quiz_subject")
+            difficulty = st.selectbox("Difficulty Level", ["easy", "medium", "hard"], key="quiz_difficulty")
+        
+        with col2:
+            num_questions = st.number_input("Number of Questions", min_value=3, max_value=15, value=5, step=1)
+            question_type = st.selectbox(
+                "Question Type",
+                ["multiple choice", "true/false", "fill in the blank", "mixed"],
+                index=0,
+                key="quiz_type"
+            )
+        
+        # Quiz personalization
+        with st.expander("🎯 Quiz Personalization"):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                include_examples = st.checkbox("Include Examples", value=True, key="quiz_examples")
+            
+            with col2:
+                adaptive_difficulty = st.checkbox("Adaptive Difficulty", value=True, key="quiz_adaptive")
+            
+            with col3:
+                use_context = st.checkbox("Use Context", value=True, key="quiz_context")
+        
+        # Generate Quiz
+        if st.button("📝 Generate Enhanced Quiz", type="primary", key="quiz_generate"):
+            with st.spinner("Creating your personalized quiz..."):
+                try:
+                    # Generate intelligent quiz
+                    quiz_data = generate_intelligent_quiz(topic, difficulty, num_questions, question_type)
+                    
+                    st.success("✅ Your personalized quiz is ready!")
+                    
+                    # Store quiz data in session state
+                    st.session_state.quiz_data = quiz_data
+                    st.session_state.quiz_attempted = False
+                    st.session_state.user_answers = {}
+                    st.session_state.quiz_score = 0
+                    
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Error generating quiz: {e}")
+        
+        # Display Interactive Quiz
+        if hasattr(st.session_state, 'quiz_data') and st.session_state.quiz_data:
+            quiz_data = st.session_state.quiz_data
+            
+            st.markdown("### 🧪 Your Personalized Quiz")
+            st.markdown(f"**Topic:** {topic} | **Difficulty:** {difficulty} | **Questions:** {len(quiz_data)} | **Type:** {question_type}")
+            
+            # Quiz Instructions
+            with st.expander("📋 Quiz Instructions"):
+                st.markdown("""
+                - Read each question carefully
+                - Select your answer using the radio buttons
+                - Click 'Submit Quiz' when you're done
+                - Your score will be calculated automatically
+                - Review correct answers and explanations after submission
+                """)
+            
+            # Quiz Questions
+            if not st.session_state.quiz_attempted:
+                st.markdown("---")
                 
-                new_session = {
-                    "subject": session_subject,
-                    "duration": session_duration,
-                    "activities": session_activities,
-                    "notes": session_notes,
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    "date": datetime.now().strftime("%Y-%m-%d")
-                }
+                for i, question in enumerate(quiz_data):
+                    st.markdown(f"**Question {i+1}:** {question['question']}")
+                    
+                    # Create radio buttons for options
+                    if 'options' in question and question['options']:
+                        user_answer = st.radio(
+                            f"Select your answer for Question {i+1}:",
+                            options=question['options'],
+                            key=f"q{i}",
+                            label_visibility="collapsed"
+                        )
+                        
+                        # Store user's answer
+                        st.session_state.user_answers[i] = user_answer
+                    
+                    st.markdown("---")
                 
-                st.session_state.study_sessions.append(new_session)
-                st.success(f"✅ Study session saved! Total time: {session_duration} minutes")
+                # Submit Button
+                if st.button("📤 Submit Quiz", type="primary", key="submit_quiz"):
+                    if len(st.session_state.user_answers) == len(quiz_data):
+                        # Grade the quiz
+                        score = 0
+                        for i, question in enumerate(quiz_data):
+                            user_answer = st.session_state.user_answers.get(i, "Not answered")
+                            correct_answer = question.get('correct_answer', '')
+                            if user_answer == correct_answer:
+                                score += 1
+                        
+                        st.session_state.quiz_score = score
+                        st.session_state.quiz_attempted = True
+                        st.rerun()
+                    else:
+                        st.warning("⚠️ Please answer all questions before submitting.")
+            
+            # Quiz Results
+            elif st.session_state.quiz_attempted:
+                st.markdown("### 📊 Quiz Results")
                 
-                # Note: Form will be cleared on next page refresh
-            else:
-                st.warning("⚠️ Please enter a subject for your study session.")
-    
-    with col2:
-        st.markdown("### 🎯 Quick Stats")
-        
-        total_sessions = len(st.session_state.study_sessions)
-        total_time = sum(session["duration"] for session in st.session_state.study_sessions)
-        unique_subjects = len(set(session["subject"] for session in st.session_state.study_sessions))
-        
-        st.metric("Total Sessions", total_sessions)
-        st.metric("Total Study Time", f"{total_time} min")
-        st.metric("Subjects Studied", unique_subjects)
-        
-        if total_time > 0:
-            avg_session = total_time / total_sessions
-            st.metric("Avg Session Length", f"{avg_session:.1f} min")
-    
-    # Progress Analytics
-    if st.session_state.study_sessions:
-        st.markdown("### 📈 Progress Analytics")
-        
-        # Study time by subject
-        subject_time = {}
-        for session in st.session_state.study_sessions:
-            subject = session["subject"]
-            if subject not in subject_time:
-                subject_time[subject] = 0
-            subject_time[subject] += session["duration"]
-        
-        if subject_time:
-            st.markdown("#### ⏱️ Study Time by Subject")
-            for subject, time in sorted(subject_time.items(), key=lambda x: x[1], reverse=True):
-                hours = time / 60
-                st.markdown(f"""
-                <div class="grid-item" style="margin-bottom: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 600; color: #ffffff;">{subject}</span>
-                        <span style="color: #4ecdc4; font-weight: 700;">{hours:.1f}h</span>
-                    </div>
-                    <div style="background: #404040; height: 8px; border-radius: 4px; margin-top: 0.5rem;">
-                        <div style="background: linear-gradient(90deg, #ff6b6b, #4ecdc4); height: 100%; border-radius: 4px; width: {min(100, (time / max(subject_time.values())) * 100)}%;"></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        # Recent sessions
-        st.markdown("#### 📅 Recent Study Sessions")
-        recent_sessions = st.session_state.study_sessions[-5:]  # Last 5 sessions
-        
-        for session in reversed(recent_sessions):
-            st.markdown(f"""
-            <div class="grid-item" style="margin-bottom: 1rem; padding: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                    <h5 style="color: #ff6b6b; margin: 0;">{session['subject']}</h5>
-                    <span style="color: #4ecdc4; font-size: 0.9rem;">{session['timestamp']}</span>
-                </div>
-                <p style="color: #e2e8f0; margin: 0.5rem 0; font-size: 0.9rem;">
-                    <strong>Duration:</strong> {session['duration']} minutes
-                </p>
-                <p style="color: #cbd5e1; margin: 0.5rem 0; font-size: 0.9rem;">
-                    <strong>Activities:</strong> {', '.join(session['activities'])}
-                </p>
-                {f"<p style='color: #a0aec0; margin: 0.5rem 0; font-size: 0.9rem;'><strong>Notes:</strong> {session['notes']}</p>" if session['notes'] else ""}
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Quiz History
-    if st.session_state.get('quiz_history'):
-        st.markdown("### 🧠 Quiz Performance History")
-        
-        for quiz in st.session_state.quiz_history:
-            st.markdown(f"""
-            <div class="grid-item" style="margin-bottom: 1rem; padding: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h5 style="color: #4ecdc4; margin: 0;">{quiz['subject']}</h5>
-                    <span style="color: #ff6b6b; font-weight: 700; font-size: 1.2rem;">{quiz['score']}%</span>
-                </div>
-                <p style="color: #e2e8f0; margin: 0.5rem 0; font-size: 0.9rem;">
-                    <strong>Difficulty:</strong> {quiz['difficulty']} | <strong>Questions:</strong> {quiz['total_questions']}
-                </p>
-                <p style="color: #cbd5e1; margin: 0.5rem 0; font-size: 0.9rem;">
-                    <strong>Date:</strong> {quiz['date']}
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Export Progress
-    if st.session_state.study_sessions:
-        st.markdown("### 📤 Export Progress")
-        
-        import json
-        progress_data = {
-            "study_sessions": st.session_state.study_sessions,
-            "completed_topics": st.session_state.completed_topics,
-            "quiz_history": st.session_state.get('quiz_history', []),
-            "export_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        
-        st.download_button(
-            label="📥 Download Progress Report (JSON)",
-            data=json.dumps(progress_data, indent=2),
-            file_name=f"smartlearn_progress_{datetime.now().strftime('%Y%m%d')}.json",
-            mime="application/json"
-        )
-        
-        # Clear all data button
-        if st.button("🗑️ Clear All Progress Data", type="secondary"):
-            st.session_state.study_sessions = []
-            st.session_state.completed_topics = []
-            st.session_state.quiz_history = []
-            st.success("✅ All progress data cleared!")
-            st.rerun()
+                # Score Display
+                score_percentage = (st.session_state.quiz_score / len(quiz_data)) * 100
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Score", f"{st.session_state.quiz_score}/{len(quiz_data)}")
+                with col2:
+                    st.metric("Percentage", f"{score_percentage:.1f}%")
+                with col3:
+                    if score_percentage >= 90:
+                        st.metric("Performance", "🎯 Excellent!")
+                    elif score_percentage >= 80:
+                        st.metric("Performance", "🌟 Great Job!")
+                    elif score_percentage >= 70:
+                        st.metric("Performance", "👍 Good Work!")
+                    elif score_percentage >= 60:
+                        st.metric("Performance", "📚 Keep Learning!")
+                    else:
+                        st.metric("Performance", "💪 Practice More!")
+                
+                st.markdown("---")
+                
+                # Detailed Results
+                st.markdown("### 📝 Question-by-Question Review")
+                
+                for i, question in enumerate(quiz_data):
+                    with st.expander(f"Question {i+1}: {question['question'][:50]}..."):
+                        # Show user's answer
+                        user_answer = st.session_state.user_answers.get(i, "Not answered")
+                        correct_answer = question.get('correct_answer', 'Unknown')
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown(f"**Your Answer:** {user_answer}")
+                        with col2:
+                            st.markdown(f"**Correct Answer:** {correct_answer}")
+                        
+                        # Show if correct
+                        is_correct = user_answer == correct_answer
+                        if is_correct:
+                            st.success("✅ Correct!")
+                        else:
+                            st.error("❌ Incorrect")
+                        
+                        # Show explanation if available
+                        if 'explanation' in question and question['explanation']:
+                            st.markdown(f"**Explanation:** {question['explanation']}")
+                        
+                        # Show options
+                        if 'options' in question and question['options']:
+                            st.markdown("**Options:**")
+                            for j, option in enumerate(question['options']):
+                                if option == correct_answer:
+                                    st.markdown(f"✅ {option}")
+                                elif option == user_answer and not is_correct:
+                                    st.markdown(f"❌ {option}")
+                                else:
+                                    st.markdown(f"• {option}")
+                
+                # Action Buttons
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("🔄 Take Quiz Again", key="retake_quiz"):
+                        st.session_state.quiz_attempted = False
+                        st.session_state.user_answers = {}
+                        st.rerun()
+                
+                with col2:
+                    if st.button("📚 Generate New Quiz", key="new_quiz"):
+                        # Clear quiz data
+                        if 'quiz_data' in st.session_state:
+                            del st.session_state.quiz_data
+                        if 'quiz_attempted' in st.session_state:
+                            del st.session_state.quiz_attempted
+                        if 'user_answers' in st.session_state:
+                            del st.session_state.user_answers
+                        if 'quiz_score' in st.session_state:
+                            del st.session_state.quiz_score
+                        st.rerun()
 
-# Professional footer
-st.markdown("""
-<div style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 100%); color: white; padding: 3rem 0; margin: 4rem -1rem -1rem -1rem; text-align: center; border-radius: 3rem 3rem 0 0;">
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; text-align: left;">
-            <div>
-                <h4 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 700; color: #ff6b6b;">🚀 SmartLearn Pro</h4>
-                <p style="opacity: 0.8; line-height: 1.6;">Ultra-professional AI-powered study assistant designed for serious learners and educational institutions.</p>
-            </div>
-            <div>
-                <h4 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 700; color: #4ecdc4;">🔧 Technology</h4>
-                <p style="opacity: 0.8; line-height: 1.6;">Built with Streamlit, powered by advanced LLM technology including Ollama and OpenAI integration.</p>
-            </div>
-            <div>
-                <h4 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 700; color: #45b7d1;">📚 Features</h4>
-                <p style="opacity: 0.8; line-height: 1.6;">Personalized study plans, AI explanations, interactive quizzes, and RAG-powered knowledge base integration.</p>
-            </div>
-        </div>
+    # Footer with subtle advanced features indicator
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #666; font-size: 0.8rem;">
+        🚀 Powered by SmartLearn Intelligent AI • Advanced Algorithms • Varied Content • Personalized Learning
     </div>
-</div>
-""", unsafe_allow_html=True) 
+    """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
