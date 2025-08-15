@@ -624,13 +624,22 @@ def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_da
     # Get subject knowledge
     subject_knowledge = KNOWLEDGE_BASE.get(subject.lower(), KNOWLEDGE_BASE["mathematics"])
     
-    # Select topics based on level and difficulty
-    if level == "beginner":
-        topics = list(subject_knowledge.keys())[:2]  # First 2 topics
-    elif level == "intermediate":
-        topics = list(subject_knowledge.keys())[:3]  # First 3 topics
-    else:  # advanced
-        topics = list(subject_knowledge.keys())  # All topics
+    # Advanced topic selection based on multiple factors
+    all_topics = list(subject_knowledge.keys())
+    
+    # Intelligent topic selection based on level and previous knowledge
+    if level == "beginner" and previous_knowledge in ["none", "basic"]:
+        topics = all_topics[:2]  # Start with fundamental topics
+    elif level == "intermediate" or (level == "beginner" and previous_knowledge in ["intermediate", "advanced"]):
+        topics = all_topics[:3] if len(all_topics) >= 3 else all_topics
+    else:  # advanced or high previous knowledge
+        topics = all_topics  # Include all available topics
+    
+    # Add variety by shuffling for different experiences each time
+    import random
+    random.shuffle(topics)
+    if len(topics) > 3:
+        topics = topics[:3]  # Keep manageable number
     
     # Personalize based on learning style
     style_methods = {
@@ -669,21 +678,69 @@ def generate_intelligent_study_plan(subject, level, minutes_per_day, duration_da
     review_time = total_minutes * 0.2    # 20% for review
     assessment_time = total_minutes * 0.1 # 10% for assessment
     
-    # Generate detailed plan with topic-specific content
+    # Generate highly personalized and detailed plan
+    import random
+    from datetime import datetime, timedelta
+    
+    # Create personalized header with motivation
+    motivational_quotes = [
+        "Success is the sum of small efforts repeated day in and day out.",
+        "The expert in anything was once a beginner.",
+        "Learning never exhausts the mind - embrace the journey!",
+        "Every master was once a disaster - keep going!",
+        "Knowledge is power, and power is the ability to act."
+    ]
+    
+    selected_quote = random.choice(motivational_quotes)
+    
+    # Calculate smart time distribution
+    total_study_time = minutes_per_day * duration_days
+    weekly_hours = (minutes_per_day * 7) / 60
+    
     plan = f"""
-## 📚 {subject.title()} Study Plan - {level.title()} Level
+## 📚 {subject.title()} Mastery Plan - {level.title()} Level
+*"{ selected_quote }"*
 
-**Duration**: {duration_days} days | **Daily Time**: {minutes_per_day} minutes  
-**Learning Goal**: {goal}
+**📊 Plan Overview:**
+- **Duration**: {duration_days} days ({duration_days//7} weeks, {duration_days%7} extra days)
+- **Daily Commitment**: {minutes_per_day} minutes ({minutes_per_day/60:.1f} hours)
+- **Weekly Hours**: {weekly_hours:.1f} hours
+- **Total Study Time**: {total_study_time/60:.1f} hours
+- **Learning Goal**: {goal}
+- **Optimized for**: {learning_style.title()} learners with {previous_knowledge} background
 
-### 🎯 Learning Objectives:
+### 🎯 Personalized Learning Objectives:
+*Tailored specifically for your {level} level and {difficulty_preference} difficulty preference*
 """
     
+    # Enhanced objective generation with variety
+    objective_templates = [
+        "Master the fundamental principles of",
+        "Develop deep understanding in",
+        "Build practical expertise with",
+        "Achieve proficiency in",
+        "Gain comprehensive knowledge of"
+    ]
+    
     for i, topic in enumerate(topics, 1):
-        # Get level-specific content for each topic
         topic_content = subject_knowledge[topic].get(level.lower(), subject_knowledge[topic]["beginner"])
-        concepts = topic_content["concepts"][:3]  # Get first 3 concepts
-        plan += f"\n{i}. **{topic.title()}** - Master: {', '.join(concepts)}"
+        concepts = topic_content["concepts"]
+        
+        # Select concepts based on difficulty preference
+        if difficulty_preference == "easy":
+            selected_concepts = concepts[:2]
+        elif difficulty_preference == "medium":
+            selected_concepts = concepts[:3]
+        else:  # hard
+            selected_concepts = concepts
+        
+        objective_template = random.choice(objective_templates)
+        plan += f"\n{i}. **{objective_template} {topic.title()}**"
+        plan += f"\n   - {', '.join(selected_concepts)}"
+        
+        # Add specific learning outcomes
+        outcomes = topic_content.get("applications", ["Practical problem solving"])
+        plan += f"\n   - *Outcome*: {random.choice(outcomes)}"
     
     plan += f"""
 
@@ -778,17 +835,32 @@ This plan incorporates {len(topics)} key topics with level-appropriate content:
 def generate_intelligent_explanation(topic, level, explanation_type, include_visuals, use_cot, include_examples):
     """Generate an intelligent, contextual explanation using knowledge base."""
     
-    # Find topic in knowledge base
+    import random
+    
+    # Advanced topic matching with fuzzy search
     topic_found = False
     topic_data = {}
     subject_name = ""
     
+    # Try exact match first
     for subject, subjects in KNOWLEDGE_BASE.items():
         if topic.lower() in subjects:
             topic_data = subjects[topic.lower()]
             subject_name = subject
             topic_found = True
             break
+    
+    # Try partial matching if exact match fails
+    if not topic_found:
+        for subject, subjects in KNOWLEDGE_BASE.items():
+            for subtopic in subjects.keys():
+                if topic.lower() in subtopic.lower() or subtopic.lower() in topic.lower():
+                    topic_data = subjects[subtopic]
+                    subject_name = subject
+                    topic_found = True
+                    break
+            if topic_found:
+                break
     
     if not topic_found:
         # Generate generic explanation if topic not found
@@ -807,15 +879,51 @@ def generate_intelligent_explanation(topic, level, explanation_type, include_vis
     examples = level_content["examples"]
     applications = level_content["applications"]
     
-    # Generate topic-specific explanation
+    # Generate comprehensive, personalized explanation
+    explanation_headers = [
+        f"## 🧠 Mastering {topic.title()} - Complete {level.title()} Guide",
+        f"## 🎓 Deep Dive into {topic.title()} - {level.title()} Level",
+        f"## 📚 Understanding {topic.title()} - Comprehensive {level.title()} Breakdown",
+        f"## 🔍 Exploring {topic.title()} - Expert {level.title()} Analysis"
+    ]
+    
+    selected_header = random.choice(explanation_headers)
+    
+    # Create dynamic introduction
+    intro_phrases = [
+        f"Let's explore the fascinating world of {topic.lower()} and understand why it's crucial in {subject_name}.",
+        f"Understanding {topic.lower()} is essential for mastering {subject_name} - here's your complete guide.",
+        f"Dive deep into {topic.lower()} with this comprehensive explanation tailored for {level} learners.",
+        f"Master {topic.lower()} with this detailed breakdown designed specifically for your learning level."
+    ]
+    
+    selected_intro = random.choice(intro_phrases)
+    
     explanation = f"""
-## 🧠 {topic.title()} - {level.title()} Level Explanation
+{selected_header}
 
-### 📖 Core Concepts:
+*{selected_intro}*
+
+### 📖 Core Concepts & Principles:
+*Building your foundation step by step*
 """
     
+    # Enhanced concept presentation with variety
+    concept_starters = ["🔹", "🔸", "📌", "🎯", "💡"]
+    
     for i, concept in enumerate(concepts, 1):
-        explanation += f"{i}. **{concept}**\n"
+        starter = random.choice(concept_starters)
+        explanation += f"{i}. {starter} **{concept}**\n"
+        
+        # Add elaboration for advanced explanations
+        if explanation_type in ["comprehensive", "with examples"]:
+            elaborations = [
+                "   - This forms the foundation for advanced understanding",
+                "   - Essential for practical applications in real-world scenarios",
+                "   - Connects directly to other fundamental principles",
+                "   - Critical for problem-solving and analysis"
+            ]
+            explanation += f"{random.choice(elaborations)}\n"
     
     explanation += f"""
 
@@ -941,88 +1049,150 @@ def generate_intelligent_quiz(topic, difficulty, num_questions, question_type):
     return questions
 
 def generate_multiple_choice_questions(topic, topic_data, difficulty, num_questions):
-    """Generate varied multiple choice questions."""
+    """Generate varied multiple choice questions with intelligent algorithms."""
     
-    # Base questions for different topics
+    import random
+    
+    # Enhanced question pools with more variety
+    calculus_questions_pool = [
+        {
+            "question": "What is the derivative of x³?",
+            "options": ["x²", "2x²", "3x²", "3x"],
+            "correct_answer": "3x²",
+            "explanation": "Using the power rule: d/dx(x^n) = n*x^(n-1). For x³, n=3, so d/dx(x³) = 3*x^(3-1) = 3x².",
+            "difficulty": "easy"
+        },
+        {
+            "question": "What is the derivative of sin(x)?",
+            "options": ["cos(x)", "-cos(x)", "sin(x)", "-sin(x)"],
+            "correct_answer": "cos(x)",
+            "explanation": "The derivative of sin(x) is cos(x). This is a fundamental trigonometric derivative.",
+            "difficulty": "easy"
+        },
+        {
+            "question": "What does the chain rule help us find?",
+            "options": ["Derivatives of composite functions", "Integrals", "Limits", "Areas"],
+            "correct_answer": "Derivatives of composite functions",
+            "explanation": "The chain rule is used to find derivatives of composite functions like f(g(x)).",
+            "difficulty": "medium"
+        },
+        {
+            "question": "If f(x) = e^(2x), what is f'(x)?",
+            "options": ["2e^(2x)", "e^(2x)", "2e^x", "e^(2x) + 2"],
+            "correct_answer": "2e^(2x)",
+            "explanation": "Using the chain rule: d/dx[e^(2x)] = e^(2x) · d/dx[2x] = e^(2x) · 2 = 2e^(2x).",
+            "difficulty": "medium"
+        },
+        {
+            "question": "What is ∫(1/x)dx?",
+            "options": ["ln|x| + C", "x + C", "1/x² + C", "-1/x + C"],
+            "correct_answer": "ln|x| + C",
+            "explanation": "The integral of 1/x is the natural logarithm: ∫(1/x)dx = ln|x| + C.",
+            "difficulty": "medium"
+        },
+        {
+            "question": "What is the second derivative test used for?",
+            "options": ["Finding concavity and inflection points", "Finding limits", "Integration", "Solving equations"],
+            "correct_answer": "Finding concavity and inflection points",
+            "explanation": "The second derivative test helps determine concavity (f'' > 0 means concave up) and locate inflection points.",
+            "difficulty": "hard"
+        }
+    ]
+    
+    algebra_questions_pool = [
+        {
+            "question": "What is the solution to 2x + 5 = 13?",
+            "options": ["x = 4", "x = 8", "x = 9", "x = 3"],
+            "correct_answer": "x = 4",
+            "explanation": "Subtract 5 from both sides: 2x = 8, then divide by 2: x = 4.",
+            "difficulty": "easy"
+        },
+        {
+            "question": "What is the vertex form of a quadratic equation?",
+            "options": ["y = ax² + bx + c", "y = a(x-h)² + k", "y = mx + b", "y = 1/x"],
+            "correct_answer": "y = a(x-h)² + k",
+            "explanation": "The vertex form y = a(x-h)² + k shows the vertex at point (h,k).",
+            "difficulty": "medium"
+        },
+        {
+            "question": "If x² - 5x + 6 = 0, what are the solutions?",
+            "options": ["x = 2, 3", "x = 1, 6", "x = -2, -3", "x = 5, 1"],
+            "correct_answer": "x = 2, 3",
+            "explanation": "Factor: (x-2)(x-3) = 0, so x = 2 or x = 3.",
+            "difficulty": "medium"
+        }
+    ]
+    
+    physics_questions_pool = [
+        {
+            "question": "What is Newton's First Law?",
+            "options": ["F = ma", "Action equals reaction", "Objects in motion stay in motion", "Gravity attracts objects"],
+            "correct_answer": "Objects in motion stay in motion",
+            "explanation": "Newton's First Law states that an object in motion will stay in motion unless acted upon by an external force.",
+            "difficulty": "easy"
+        },
+        {
+            "question": "What is the formula for kinetic energy?",
+            "options": ["KE = mgh", "KE = ½mv²", "KE = Fd", "KE = Pt"],
+            "correct_answer": "KE = ½mv²",
+            "explanation": "Kinetic energy is calculated using KE = ½mv², where m is mass and v is velocity.",
+            "difficulty": "medium"
+        }
+    ]
+    
+    # Smart question pool selection
     base_questions = {
-        "calculus": [
+        "calculus": calculus_questions_pool,
+        "algebra": algebra_questions_pool,
+        "physics": physics_questions_pool,
+        "mechanics": physics_questions_pool,
+        "programming": [
             {
-                "question": "What is the derivative of x³?",
-                "options": ["x²", "2x²", "3x²", "3x"],
-                "correct_answer": "3x²",
-                "explanation": "Using the power rule: d/dx(x^n) = n*x^(n-1). For x³, n=3, so d/dx(x³) = 3*x^(3-1) = 3x²."
-            },
-            {
-                "question": "What does the integral represent geometrically?",
-                "options": ["Slope of the curve", "Area under the curve", "Length of the curve", "Volume of revolution"],
-                "correct_answer": "Area under the curve",
-                "explanation": "The definite integral calculates the area between the curve and the x-axis over a specified interval."
-            },
-            {
-                "question": "What is the limit of 1/x as x approaches infinity?",
-                "options": ["Infinity", "1", "0", "Undefined"],
-                "correct_answer": "0",
-                "explanation": "As x gets larger and larger, 1/x gets smaller and smaller, approaching 0."
-            },
-            {
-                "question": "What is the derivative of a constant function?",
-                "options": ["The constant itself", "Zero", "One", "Undefined"],
-                "correct_answer": "Zero",
-                "explanation": "A constant function doesn't change, so its rate of change (derivative) is zero."
-            },
-            {
-                "question": "What is the integral of 2x?",
-                "options": ["x²", "x² + C", "2x²", "2x² + C"],
-                "correct_answer": "x² + C",
-                "explanation": "The integral of 2x is x² + C, where C is the constant of integration."
-            }
-        ],
-        "algebra": [
-            {
-                "question": "What is the solution to 2x + 5 = 13?",
-                "options": ["x = 4", "x = 8", "x = 9", "x = 3"],
-                "correct_answer": "x = 4",
-                "explanation": "Subtract 5 from both sides: 2x = 8, then divide by 2: x = 4."
-            },
-            {
-                "question": "What is the vertex form of a quadratic equation?",
-                "options": ["y = ax² + bx + c", "y = a(x-h)² + k", "y = mx + b", "y = 1/x"],
-                "correct_answer": "y = a(x-h)² + k",
-                "explanation": "The vertex form y = a(x-h)² + k shows the vertex at point (h,k)."
-            },
-            {
-                "question": "What is the slope of the line y = 3x + 2?",
-                "options": ["2", "3", "5", "Undefined"],
-                "correct_answer": "3",
-                "explanation": "In the slope-intercept form y = mx + b, m is the slope, so the slope is 3."
-            }
-        ],
-        "physics": [
-            {
-                "question": "What is Newton's First Law?",
-                "options": ["F = ma", "Action equals reaction", "Objects in motion stay in motion", "Gravity attracts objects"],
-                "correct_answer": "Objects in motion stay in motion",
-                "explanation": "Newton's First Law states that an object in motion will stay in motion unless acted upon by an external force."
-            },
-            {
-                "question": "What is the formula for kinetic energy?",
-                "options": ["KE = mgh", "KE = ½mv²", "KE = Fd", "KE = Pt"],
-                "correct_answer": "KE = ½mv²",
-                "explanation": "Kinetic energy is calculated using KE = ½mv², where m is mass and v is velocity."
+                "question": "What is a variable in programming?",
+                "options": ["A storage location with a name", "A function", "A loop", "An error"],
+                "correct_answer": "A storage location with a name",
+                "explanation": "A variable is a named storage location that can hold different values during program execution.",
+                "difficulty": "easy"
             }
         ]
-    }
     
-    # Get questions for the specific topic
-    topic_questions = base_questions.get(topic.lower(), base_questions["calculus"])
+    # Intelligent question selection based on topic and difficulty
+    topic_questions = []
     
-    # Adjust difficulty and add variety
+    # Find matching questions
+    for topic_key, questions in base_questions.items():
+        if topic.lower() in topic_key.lower() or topic_key.lower() in topic.lower():
+            topic_questions = questions
+            break
+    
+    # Fallback to calculus if no match found
+    if not topic_questions:
+        topic_questions = calculus_questions_pool
+    
+    # Smart difficulty filtering
+    filtered_questions = []
+    for q in topic_questions:
+        if difficulty == "easy" and q.get("difficulty", "medium") in ["easy"]:
+            filtered_questions.append(q)
+        elif difficulty == "medium" and q.get("difficulty", "medium") in ["easy", "medium"]:
+            filtered_questions.append(q)
+        elif difficulty == "hard":  # Include all difficulties for hard
+            filtered_questions.append(q)
+    
+    # If no filtered questions, use all available
+    if not filtered_questions:
+        filtered_questions = topic_questions
+    
+    # Shuffle for variety
+    random.shuffle(filtered_questions)
+    
+    # Select appropriate number based on difficulty
     if difficulty == "easy":
-        questions = topic_questions[:min(3, len(topic_questions))]
+        questions = filtered_questions[:min(3, len(filtered_questions))]
     elif difficulty == "medium":
-        questions = topic_questions[:min(4, len(topic_questions))]
+        questions = filtered_questions[:min(4, len(filtered_questions))]
     else:  # hard
-        questions = topic_questions[:min(5, len(topic_questions))]
+        questions = filtered_questions[:min(6, len(filtered_questions))]
     
     # Ensure we have enough questions
     while len(questions) < num_questions:
