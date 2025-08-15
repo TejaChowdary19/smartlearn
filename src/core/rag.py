@@ -4,7 +4,12 @@ import os
 import re
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
-from langchain_chroma import Chroma  # Updated import
+try:
+    from langchain_chroma import Chroma  # Updated import
+    CHROMA_AVAILABLE = True
+except ImportError:
+    from langchain.vectorstores import Chroma  # Fallback import
+    CHROMA_AVAILABLE = False
 from langchain.embeddings.base import Embeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
