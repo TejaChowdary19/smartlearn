@@ -1155,6 +1155,7 @@ def generate_multiple_choice_questions(topic, topic_data, difficulty, num_questi
                 "difficulty": "easy"
             }
         ]
+    }
     
     # Intelligent question selection based on topic and difficulty
     topic_questions = []
